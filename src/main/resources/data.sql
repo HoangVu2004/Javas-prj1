@@ -6,12 +6,12 @@ INSERT INTO roles (name, description) VALUES
 ('STAFF', 'Nhân viên hỗ trợ kỹ thuật'),
 ('CUSTOMER', 'Khách hàng mua sản phẩm');
 
--- 2. THÊM USERS (password = "123456" không mã hóa)
-INSERT INTO users (username, email, password, full_name, phone, address) VALUES 
+-- 2. THÊM USERS (password gốc = "123456" đã được hash bằng BCrypt)
+INSERT INTO users (username, email, password, full_name, phone, address) VALUES
 ('admin', 'admin@stemkit.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'System Administrator', '0901234567', 'Hà Nội'),
-('manager1', 'manager@stemkit.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Nguyễn Văn Manager', '0901234568', 'TP.HCM'),
-('staff1', 'staff1@stemkit.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Trần Thị Staff', '0901234569', 'Đà Nẵng'),
-('staff2', 'staff2@stemkit.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Lê Văn Support', '0901234570', 'Cần Thơ'),
+('manager1', 'manager@stemkit.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Nguyễn Văn Hoàng', '0901234568', 'TP.HCM'),
+('staff1', 'staff1@stemkit.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Trần Thị Hạnh', '0901234569', 'Đà Nẵng'),
+('staff2', 'staff2@stemkit.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Lê Văn Phúc', '0901234570', 'Cần Thơ'),
 ('customer1', 'customer1@gmail.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Phạm Thị Khách', '0901234571', '123 Nguyễn Huệ, Q1, TP.HCM'),
 ('customer2', 'customer2@gmail.com', '$2a$12$TZTsft1k1Xm6pzUu/4aywe6glQfw3EBzkx4liDKhSwcjg6wO/xZYi', 'Hoàng Văn Mua', '0901234572', '456 Lê Lợi, Hà Nội');
 
