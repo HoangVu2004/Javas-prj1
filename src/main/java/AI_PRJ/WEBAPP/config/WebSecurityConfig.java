@@ -13,11 +13,14 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import AI_PRJ.WEBAPP.security.CustomUserDetailsService;
+import AI_PRJ.WEBAPP.security.JwtAuthenticationEntryPoint;
+import AI_PRJ.WEBAPP.security.JwtAuthenticationFilter;
 
 /**
- * Cấu hình Spring Security cho hệ thống phân quyền
+ * Cấu hình Spring Security cho hệ thống phân quyền với JWT
  * Định nghĩa các rule truy cập theo role: ADMIN, MANAGER, STAFF, CUSTOMER
  */
 @Configuration
@@ -26,6 +29,17 @@ public class WebSecurityConfig {
 
     @Autowired
     private CustomUserDetailsService userDetailsService;
+
+    @Autowired
+    private JwtAuthenticationEntryPoint unauthorizedHandler;
+
+    /**
+     * Bean cho JWT Authentication Filter
+     */
+    @Bean
+    public JwtAuthenticationFilter authenticationJwtTokenFilter() {
+        return new JwtAuthenticationFilter();
+    }
 
     /**
      * Cấu hình Security Filter Chain
@@ -63,11 +77,11 @@ public class WebSecurityConfig {
                 .anyRequest().authenticated()
             )
             
-            // Cấu hình HTTP Basic Authentication (cho testing)
-            .httpBasic(basic -> basic.realmName("STEM Kit API"))
-            
             // Tắt hoàn toàn form login cho REST API
             .formLogin(form -> form.disable())
+            
+            // Tắt HTTP Basic Authentication vì dùng JWT
+            .httpBasic(basic -> basic.disable())
             
             // Cấu hình logout
             .logout(logout -> logout
@@ -77,7 +91,15 @@ public class WebSecurityConfig {
             )
             
             // Sử dụng custom authentication provider
-            .authenticationProvider(authenticationProvider());
+            .authenticationProvider(authenticationProvider())
+            
+            // Cấu hình exception handling
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint(unauthorizedHandler)
+            )
+            
+            // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
+            .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

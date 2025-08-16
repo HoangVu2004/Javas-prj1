@@ -3,6 +3,8 @@ package AI_PRJ.WEBAPP.security;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -21,6 +23,8 @@ import AI_PRJ.WEBAPP.repository.UserRepository;
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
 
+    private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsService.class);
+
     @Autowired
     private UserRepository userRepository;
 
@@ -34,14 +38,22 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     @Override
     public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        logger.info("Loading user by username/email: {}", usernameOrEmail);
+        
         // Tìm user theo username hoặc email
         User user = userRepository.findByUsername(usernameOrEmail)
                 .or(() -> userRepository.findByEmail(usernameOrEmail))
-                .orElseThrow(() -> new UsernameNotFoundException(
-                    "User không tồn tại với username/email: " + usernameOrEmail));
+                .orElseThrow(() -> {
+                    logger.error("User không tồn tại với username/email: {}", usernameOrEmail);
+                    return new UsernameNotFoundException(
+                        "User không tồn tại với username/email: " + usernameOrEmail);
+                });
+
+        logger.info("Found user: {}, status: {}", user.getUsername(), user.getStatus());
 
         // Kiểm tra trạng thái tài khoản
         if (user.getStatus() != User.Status.ACTIVE) {
+            logger.error("Tài khoản không active: {}", usernameOrEmail);
             throw new UsernameNotFoundException("Tài khoản đã bị khóa hoặc chưa được kích hoạt: " + usernameOrEmail);
         }
 
@@ -49,6 +61,9 @@ public class CustomUserDetailsService implements UserDetailsService {
         List<GrantedAuthority> authorities = user.getRoles().stream()
                 .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
                 .collect(Collectors.toList());
+
+        logger.info("User {} có {} roles: {}", user.getUsername(), authorities.size(), 
+                   authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
 
         // Tạo UserDetails object
         return org.springframework.security.core.userdetails.User.builder()
