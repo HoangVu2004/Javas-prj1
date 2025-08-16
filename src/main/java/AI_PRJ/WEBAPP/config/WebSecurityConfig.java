@@ -20,8 +20,16 @@ import AI_PRJ.WEBAPP.security.JwtAuthenticationEntryPoint;
 import AI_PRJ.WEBAPP.security.JwtAuthenticationFilter;
 
 /**
- * Cấu hình Spring Security cho hệ thống phân quyền với JWT
- * Định nghĩa các rule truy cập theo role: ADMIN, MANAGER, STAFF, CUSTOMER
+ * =============================================
+ * SPRING SECURITY CONFIGURATION - JWT ONLY
+ * =============================================
+ * 
+ * Cấu hình bảo mật cho hệ thống STEM Kit sử dụng JWT
+ * 
+ * Tính năng:
+ * - JWT Authentication (không dùng session)
+ * - Role-based Authorization: ADMIN, MANAGER, STAFF, CUSTOMER
+ * - Stateless security
  */
 @Configuration
 @EnableWebSecurity
@@ -34,7 +42,7 @@ public class WebSecurityConfig {
     private JwtAuthenticationEntryPoint unauthorizedHandler;
 
     /**
-     * Bean cho JWT Authentication Filter
+     * JWT Authentication Filter Bean
      */
     @Bean
     public JwtAuthenticationFilter authenticationJwtTokenFilter() {
@@ -42,81 +50,102 @@ public class WebSecurityConfig {
     }
 
     /**
-     * Cấu hình Security Filter Chain
-     * Định nghĩa quyền truy cập cho từng endpoint
+     * MAIN SECURITY CONFIGURATION
+     * ===========================
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            // Disable CSRF cho API REST
+            // ========== STATELESS JWT SETUP ==========
             .csrf(csrf -> csrf.disable())
+            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
-            // Cấu hình session management - STATELESS cho API
-            .sessionManagement(session -> session
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            )
+            // ========== DISABLE FORM & BASIC AUTH ==========
+            .formLogin(form -> form.disable())
+            .httpBasic(basic -> basic.disable())
             
-            // Cấu hình authorization
+            // ========== API AUTHORIZATION RULES ==========
             .authorizeHttpRequests(auth -> auth
-                // Public endpoints - không cần authentication
-                .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
+                // Public endpoints (không cần JWT)
+                .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
                 .requestMatchers("/api/test/**").permitAll()
                 
-                // User management endpoints - phân quyền theo role
+                // ========== ADMIN ONLY ==========
                 .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/users/*/roles/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/*/roles/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                
+                // ========== MANAGER PERMISSIONS ==========
+                // Quản lý users
+                .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAnyRole("ADMIN", "MANAGER")
-                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/users/*/status/**").hasAnyRole("ADMIN", "MANAGER")
                 .requestMatchers(HttpMethod.GET, "/api/users/role/**").hasAnyRole("ADMIN", "MANAGER")
                 
-                // Tất cả requests khác cần authentication
+                // Quản lý KIT và LAB
+                .requestMatchers("/api/kits/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/api/labs/**").hasAnyRole("ADMIN", "MANAGER")
+                
+                // Quản lý giao nhận
+                .requestMatchers("/api/shipments/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/api/orders/*/status/**").hasAnyRole("ADMIN", "MANAGER")
+                
+                // Báo cáo và thống kê
+                .requestMatchers("/api/reports/**").hasAnyRole("ADMIN", "MANAGER")
+                .requestMatchers("/api/statistics/**").hasAnyRole("ADMIN", "MANAGER")
+                
+                // ========== STAFF PERMISSIONS ==========
+                // Hỗ trợ kỹ thuật
+                .requestMatchers("/api/support/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                .requestMatchers(HttpMethod.GET, "/api/labs/*/help").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                .requestMatchers(HttpMethod.POST, "/api/support/tickets").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                .requestMatchers(HttpMethod.PUT, "/api/support/tickets/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                
+                // Xem thông tin khách hàng (để hỗ trợ)
+                .requestMatchers(HttpMethod.GET, "/api/customers/**").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                
+                // ========== CUSTOMER PERMISSIONS ==========
+                // Mua sắm
+                .requestMatchers(HttpMethod.GET, "/api/kits").hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER")
+                .requestMatchers(HttpMethod.GET, "/api/kits/*").hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER")
+                .requestMatchers("/api/orders").hasAnyRole("ADMIN", "MANAGER", "CUSTOMER")
+                .requestMatchers("/api/cart/**").hasRole("CUSTOMER")
+                
+                // Truy cập bài LAB (chỉ khi đã mua KIT)
+                .requestMatchers(HttpMethod.GET, "/api/my-labs/**").hasRole("CUSTOMER")
+                .requestMatchers(HttpMethod.POST, "/api/support/request").hasRole("CUSTOMER")
+                
+                // Profile cá nhân
+                .requestMatchers(HttpMethod.GET, "/api/profile").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/api/profile").authenticated()
+                
+                // Tất cả API khác cần authentication
                 .anyRequest().authenticated()
             )
             
-            // Tắt hoàn toàn form login cho REST API
-            .formLogin(form -> form.disable())
-            
-            // Tắt HTTP Basic Authentication vì dùng JWT
-            .httpBasic(basic -> basic.disable())
-            
-            // Cấu hình logout
-            .logout(logout -> logout
-                .logoutUrl("/api/auth/logout")
-                .logoutSuccessUrl("/")
-                .permitAll()
-            )
-            
-            // Sử dụng custom authentication provider
-            .authenticationProvider(authenticationProvider())
-            
-            // Cấu hình exception handling
+            // ========== JWT EXCEPTION HANDLING ==========
             .exceptionHandling(exceptions -> exceptions
                 .authenticationEntryPoint(unauthorizedHandler)
             )
             
-            // Thêm JWT filter trước UsernamePasswordAuthenticationFilter
+            // ========== JWT FILTER ==========
+            .authenticationProvider(authenticationProvider())
             .addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
     /**
-     * Bean cho password encoder
-     * Sử dụng BCrypt để mã hóa password
+     * ========== REQUIRED BEANS ==========
      */
+    
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Bean cho authentication provider
-     * Kết nối UserDetailsService với PasswordEncoder
-     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -125,10 +154,6 @@ public class WebSecurityConfig {
         return authProvider;
     }
 
-    /**
-     * Bean cho authentication manager
-     * Cần thiết cho authentication process
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
