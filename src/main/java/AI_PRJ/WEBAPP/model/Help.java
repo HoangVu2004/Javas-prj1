@@ -3,11 +3,11 @@ package AI_PRJ.WEBAPP.model;
 import java.io.Serializable;
 import java.util.Objects;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.IdClass;
+import jakarta.persistence.Table;
 
 @Entity
 @IdClass(Help.HelpId.class)
@@ -81,6 +81,22 @@ public class Help {
 
         public HelpId(String user, String lab) {
             this.user = user;
+            this.lab = lab;
+        }
+
+        public String getUser() {
+            return user;
+        }
+
+        public void setUser(String user) {
+            this.user = user;
+        }
+
+        public String getLab() {
+            return lab;
+        }
+
+        public void setLab(String lab) {
             this.lab = lab;
         }
 
