@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kits</title>
+</head>
+<body>
+    <h1>Available Kits</h1>
+    <div id="kit-list"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            fetch('/api/kits', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                     window.location.href = '/login.html';
+                }
+                if (!response.ok) {
+                    throw new Error('Failed to fetch kits.');
+                }
+                return response.json();
+            })
+            .then(kits => {
+                const kitList = document.getElementById('kit-list');
+                if (kits.length === 0) {
+                    kitList.innerHTML = '<p>No kits available.</p>';
+                    return;
+                }
+
+                const ul = document.createElement('ul');
+                kits.forEach(kit => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <h3>${kit.name}</h3>
+                        <p>${kit.description}</p>
+                        <p>Price: $${kit.price}</p>
+                    `;
+                    ul.appendChild(li);
+                });
+                kitList.appendChild(ul);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('kit-list').innerHTML = `<p>${error.message}</p>`;
+            });
+        });
+    </script>
+</body>
+</html>
