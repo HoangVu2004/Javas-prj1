@@ -1,6 +1,6 @@
-AI_PRJ\WEBAPP\controller\HelpApi.class
-AI_PRJ\WEBAPP\model\Help.class
 AI_PRJ\WEBAPP\repository\HelpRepo.class
+AI_PRJ\WEBAPP\service\HelpService.class
+AI_PRJ\WEBAPP\controller\HelpApi.class
 AI_PRJ\WEBAPP\HelpSupportApplication.class
 AI_PRJ\WEBAPP\model\Help$HelpId.class
-AI_PRJ\WEBAPP\service\HelpService.class
+AI_PRJ\WEBAPP\model\Help.class

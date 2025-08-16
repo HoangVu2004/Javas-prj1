@@ -1,3 +1,4 @@
+SET FOREIGN_KEY_CHECKS = 0;
 -- ===== SCHEMA STEM KIT=====
 
 -- Xóa bảng cũ (theo thứ tự dependency)
@@ -8,9 +9,9 @@ DROP TABLE IF EXISTS lab_activations;
 DROP TABLE IF EXISTS deliveries;
 DROP TABLE IF EXISTS orders;
 DROP TABLE IF EXISTS labs;
+DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS kits;
 DROP TABLE IF EXISTS categories;
-DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
 
@@ -219,3 +220,5 @@ CREATE INDEX idx_lab_activations_code ON lab_activations(activation_code);
 CREATE INDEX idx_labs_title ON labs(title);
 CREATE INDEX idx_labs_difficulty ON labs(difficulty_level);
 CREATE INDEX idx_labs_status ON labs(status);
+
+SET FOREIGN_KEY_CHECKS = 1;
