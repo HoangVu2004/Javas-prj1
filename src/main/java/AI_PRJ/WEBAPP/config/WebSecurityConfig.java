@@ -49,6 +49,12 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                 .requestMatchers("/api/test/**").permitAll()
                 
+                // Temporarily permit all for testing HTML files
+                .requestMatchers("/api/kits/**").permitAll()
+                .requestMatchers("/api/labs/**").permitAll()
+                .requestMatchers("/help/**").permitAll()
+                .requestMatchers("/api/ship/**").permitAll()
+
                 // User management endpoints - phân quyền theo role
                 .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/users/**").hasAnyRole("ADMIN", "MANAGER")
