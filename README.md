@@ -6,19 +6,19 @@
 # Trần Minh Luân 22h1120130
 # Nguyễn Trung Nguyên 22h1120132
 # Nguyễn Bá Sơn 22h1120137
-# Đỗ Minh Tâm 22h1120138
 
 
-src/
-├── main/
-│   ├── java/
-│   │   └── AI_PRJ.WEBAPP/
-│   │       ├── controller/
-│   │       ├── model/
-│   │       ├── repository/
-│   │       └── service/
-│   └── resources/
-│       ├── application.properties
-│       ├── static/
-│       └── templates/  ← có thể dùng hoặc không
-└── test/
+
+//src/
+//├── main/
+//│   ├── java/
+//│   │   └── AI_PRJ.WEBAPP/
+//│   │       ├── controller/
+//│   │       ├── model/
+//│   │       ├── repository/
+//│   │       └── service/
+//│   └── resources/
+//│       ├── application.properties
+//│       ├── static/
+//│       └── templates/  ← có thể dùng hoặc không
+//└── test/

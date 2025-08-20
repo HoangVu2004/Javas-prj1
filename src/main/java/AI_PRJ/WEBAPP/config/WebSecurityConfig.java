@@ -70,7 +70,7 @@ public class WebSecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
                 .requestMatchers("/api/test/**").permitAll()
                 
-                // ========== ADMIN ONLY ==========
+                // User management endpoints - phân quyền theo role
                 .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/users/*/roles/**").hasRole("ADMIN")

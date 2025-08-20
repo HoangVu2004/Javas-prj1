@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Help/Support</title>
+</head>
+<body>
+    <h1>Request Help</h1>
+    <form id="helpForm">
+        <div>
+            <label for="user">User:</label>
+            <input type="text" id="user" name="user" required>
+        </div>
+        <div>
+            <label for="lab">Lab:</label>
+            <input type="text" id="lab" name="lab" required>
+        </div>
+        <button type="submit">Request Support</button>
+    </form>
+
+    <hr>
+
+    <h1>All Help Requests</h1>
+    <div id="help-requests"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            const helpForm = document.getElementById('helpForm');
+            helpForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+
+                const user = document.getElementById('user').value;
+                const lab = document.getElementById('lab').value;
+
+                fetch(`/help/record?user=${user}&lab=${lab}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        alert('Support recorded successfully!');
+                        loadHelpRequests(); // Refresh the list
+                    } else {
+                        response.text().then(text => {
+                            alert(`Error: ${text}`);
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An unexpected error occurred.');
+                });
+            });
+
+            function loadHelpRequests() {
+                fetch('/help/all', {
+                     headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                     if (response.status === 401 || response.status === 403) {
+                        window.location.href = '/login.html';
+                    }
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch help requests.');
+                    }
+                    return response.json();
+                })
+                .then(requests => {
+                    const helpRequests = document.getElementById('help-requests');
+                    if (requests.length === 0) {
+                        helpRequests.innerHTML = '<p>No help requests found.</p>';
+                        return;
+                    }
+
+                    const ul = document.createElement('ul');
+                    requests.forEach(request => {
+                        const li = document.createElement('li');
+                        li.textContent = `User: ${request.user}, Lab: ${request.lab}`;
+                        ul.appendChild(li);
+                    });
+                    helpRequests.innerHTML = '';
+                    helpRequests.appendChild(ul);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('help-requests').innerHTML = `<p>${error.message}</p>`;
+                });
+            }
+
+            loadHelpRequests();
+        });
+    </script>
+</body>
+</html>
