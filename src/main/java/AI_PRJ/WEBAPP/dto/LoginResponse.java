@@ -17,6 +17,8 @@ public class LoginResponse {
     private String fullName;
     private Set<Role> roles;
     private String message;
+    private String accessToken;
+    private String tokenType = "Bearer";
 
     public LoginResponse() {}
 
@@ -31,5 +33,15 @@ public class LoginResponse {
         this.fullName = fullName;
         this.roles = roles;
         this.message = message;
+    }
+
+    public LoginResponse(Long id, String username, String email, String fullName, Set<Role> roles, String message, String accessToken) {
+        this.id = id;
+        this.username = username;
+        this.email = email;
+        this.fullName = fullName;
+        this.roles = roles;
+        this.message = message;
+        this.accessToken = accessToken;
     }
 }

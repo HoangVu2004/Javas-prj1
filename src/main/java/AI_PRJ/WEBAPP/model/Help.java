@@ -84,6 +84,22 @@ public class Help {
             this.lab = lab;
         }
 
+        public String getUser() {
+            return user;
+        }
+
+        public void setUser(String user) {
+            this.user = user;
+        }
+
+        public String getLab() {
+            return lab;
+        }
+
+        public void setLab(String lab) {
+            this.lab = lab;
+        }
+
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
