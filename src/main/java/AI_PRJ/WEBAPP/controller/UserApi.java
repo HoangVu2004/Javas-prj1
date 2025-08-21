@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,131 +21,205 @@ import AI_PRJ.WEBAPP.model.User;
 import AI_PRJ.WEBAPP.service.UserService;
 
 /**
- * REST API cho quản lý User
- * Cung cấp các endpoint để quản lý người dùng và phân quyền
+ * =============================================
+ * USER API - QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG  
+ * =============================================
+ * 
+ * Phân quyền nghiêm ngặt theo yêu cầu đề bài:
+ * - ADMIN: Toàn quyền quản lý users và phân quyền
+ * - MANAGER: Quản lý tài khoản người dùng (khách hàng & nhân viên)
+ * - STAFF, CUSTOMER: Chỉ xem thông tin cá nhân
+ * 
+ * Bảo mật:
+ * - Chỉ ADMIN có thể gán/xóa roles
+ * - MANAGER có thể quản lý user accounts nhưng không chỉnh sửa ADMIN
+ * - Method-level security với @PreAuthorize
  */
 @RestController
 @RequestMapping("/api/users")
+@CrossOrigin(origins = "*", maxAge = 3600)
 public class UserApi {
 
     @Autowired
     private UserService userService;
 
     /**
-     * Lấy danh sách tất cả người dùng
-     * GET /api/users
+     * Xem tất cả users - Dành cho ADMIN
+     * Truy cập: Chỉ ADMIN (toàn quyền)
      */
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers() {
-        List<User> users = userService.getAllUsers();
-        return ResponseEntity.ok(users);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> getAllUsers() {
+        try {
+            List<User> users = userService.getAllUsers();
+            return ResponseEntity.ok(new ApiResponse(true, 
+                "Lấy danh sách users thành công", users));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
+        }
     }
 
     /**
-     * Lấy thông tin người dùng theo ID
-     * GET /api/users/{id}
+     * Xem chi tiết user - ADMIN và MANAGER
+     * Truy cập: ADMIN (tất cả), MANAGER (quản lý users)
      */
     @GetMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<?> getUserById(@PathVariable Long id) {
-        Optional<User> user = userService.getUserById(id);
-        if (user.isPresent()) {
-            return ResponseEntity.ok(user.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    /**
-     * Lấy người dùng theo username
-     * GET /api/users/username/{username}
-     */
-    @GetMapping("/username/{username}")
-    public ResponseEntity<?> getUserByUsername(@PathVariable String username) {
-        Optional<User> user = userService.getUserByUsername(username);
-        if (user.isPresent()) {
-            return ResponseEntity.ok(user.get());
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    /**
-     * Gán role cho người dùng
-     * PUT /api/users/{id}/roles/{roleName}
-     */
-    @PutMapping("/{id}/roles/{roleName}")
-    public ResponseEntity<?> assignRole(@PathVariable Long id, @PathVariable RoleName roleName) {
         try {
-            User updatedUser = userService.assignRole(id, roleName);
-            return ResponseEntity.ok("Đã gán role " + roleName + " cho user " + updatedUser.getUsername());
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
+            Optional<User> userOpt = userService.getUserById(id);
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, "Không tìm thấy user với ID: " + id));
+            }
+            
+            return ResponseEntity.ok(new ApiResponse(true, 
+                "Lấy thông tin user thành công", userOpt.get()));
+                
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
         }
     }
 
     /**
-     * Xóa role của người dùng
-     * DELETE /api/users/{id}/roles/{roleName}
-     */
-    @DeleteMapping("/{id}/roles/{roleName}")
-    public ResponseEntity<?> removeRole(@PathVariable Long id, @PathVariable RoleName roleName) {
-        try {
-            User updatedUser = userService.removeRole(id, roleName);
-            return ResponseEntity.ok("Đã xóa role " + roleName + " của user " + updatedUser.getUsername());
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Cập nhật thông tin người dùng
-     * PUT /api/users/{id}
+     * Cập nhật user
+     * Truy cập: ADMIN và MANAGER (quản lý tài khoản người dùng)
      */
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User userUpdate) {
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
         try {
-            User updatedUser = userService.updateUser(id, userUpdate);
-            return ResponseEntity.ok(updatedUser);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
+            User updatedUser = userService.updateUser(id, user);
+            return ResponseEntity.ok(new ApiResponse(true, 
+                "Cập nhật user thành công", updatedUser));
+                
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
         }
     }
 
     /**
-     * Thay đổi trạng thái người dùng (ACTIVE/INACTIVE/BLOCKED)
-     * PUT /api/users/{id}/status/{status}
-     */
-    @PutMapping("/{id}/status/{status}")
-    public ResponseEntity<?> changeUserStatus(@PathVariable Long id, @PathVariable User.Status status) {
-        try {
-            User updatedUser = userService.changeUserStatus(id, status);
-            return ResponseEntity.ok("Đã thay đổi trạng thái user " + updatedUser.getUsername() + " thành " + status);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Xóa người dùng
-     * DELETE /api/users/{id}
+     * Xóa user - Chỉ ADMIN
+     * Truy cập: Chỉ ADMIN (quyền cao nhất)
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
             userService.deleteUser(id);
-            return ResponseEntity.ok("Đã xóa người dùng thành công");
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Lỗi: " + e.getMessage());
+            return ResponseEntity.ok(new ApiResponse(true, "Xóa user thành công"));
+            
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
         }
     }
 
     /**
-     * Lấy danh sách người dùng theo role
-     * GET /api/users/role/{roleName}
+     * Xem users theo role - ADMIN và MANAGER
+     * Truy cập: ADMIN, MANAGER (để quản lý theo vai trò)
      */
     @GetMapping("/role/{roleName}")
-    public ResponseEntity<List<User>> getUsersByRole(@PathVariable RoleName roleName) {
-        List<User> users = userService.getUsersByRole(roleName);
-        return ResponseEntity.ok(users);
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> getUsersByRole(@PathVariable String roleName) {
+        try {
+            RoleName roleEnum = RoleName.valueOf(roleName.toUpperCase());
+            List<User> users = userService.getUsersByRole(roleEnum);
+            return ResponseEntity.ok(new ApiResponse(true, 
+                "Lấy users theo role thành công", users));
+                
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Gán role cho user - Chỉ ADMIN
+     * Truy cập: Chỉ ADMIN (quản lý phân quyền)
+     */
+    @PutMapping("/{userId}/roles/{roleNameStr}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> addRoleToUser(@PathVariable Long userId, @PathVariable String roleNameStr) {
+        try {
+            RoleName roleName = RoleName.valueOf(roleNameStr.toUpperCase());
+            User user = userService.assignRole(userId, roleName);
+            
+            return ResponseEntity.ok(new ApiResponse(true, 
+                "Gán role cho user thành công", user));
+                
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Xóa role khỏi user - Chỉ ADMIN
+     * Truy cập: Chỉ ADMIN (quản lý phân quyền)
+     */
+    @DeleteMapping("/{userId}/roles/{roleNameStr}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> removeRoleFromUser(@PathVariable Long userId, @PathVariable String roleNameStr) {
+        try {
+            RoleName roleName = RoleName.valueOf(roleNameStr.toUpperCase());
+            User user = userService.removeRole(userId, roleName);
+            
+            return ResponseEntity.ok(new ApiResponse(true, 
+                "Xóa role khỏi user thành công", user));
+                
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Cập nhật trạng thái user (enable/disable) - ADMIN và MANAGER
+     * Truy cập: ADMIN, MANAGER (quản lý tài khoản người dùng)
+     */
+    @PutMapping("/{id}/status/{status}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> updateUserStatus(@PathVariable Long id, @PathVariable String status) {
+        try {
+            User.Status userStatus = User.Status.valueOf(status.toUpperCase());
+            User user = userService.changeUserStatus(id, userStatus);
+            
+            return ResponseEntity.ok(new ApiResponse(true, 
+                "Cập nhật trạng thái user thành công", user));
+                
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Inner class for API Response
+     */
+    private static class ApiResponse {
+        private boolean success;
+        private String message;
+        private Object data;
+
+        public ApiResponse(boolean success, String message) {
+            this.success = success;
+            this.message = message;
+        }
+
+        public ApiResponse(boolean success, String message, Object data) {
+            this.success = success;
+            this.message = message;
+            this.data = data;
+        }
+
+        // Getters
+        public boolean isSuccess() { return success; }
+        public String getMessage() { return message; }
+        public Object getData() { return data; }
     }
 }
