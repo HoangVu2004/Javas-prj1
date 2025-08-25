@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff Ticket Management</title>
+    <!-- Link to CSS files if available -->
+    <link rel="stylesheet" href="css/kit.css">
+    <link rel="stylesheet" href="css/lab.css">
+    <link rel="stylesheet" href="css/style.css"> <!-- Added style.css link -->
+</head>
+<body>
+    <div class="container">
+        <h1>Staff Ticket Management</h1>
+
+        <!-- Section for Ticket List -->
+        <div class="section">
+            <h2>Support Tickets</h2>
+            <p>View and manage customer support tickets.</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Ticket ID</th>
+                        <th>Customer</th>
+                        <th>Lab</th>
+                        <th>Status</th>
+                        <th>Date Created</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="ticket-list-table-body">
+                    <!-- Ticket data will be loaded via API -->
+                    <tr>
+                        <td colspan="6" style="text-align: center;">Loading tickets...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Ticket Detail Modal -->
+    <div id="ticketDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Ticket Details</h2>
+            <p><strong>Ticket ID:</strong> <span id="modal-ticket-id"></span></p>
+            <p><strong>Customer:</strong> <span id="modal-customer"></span></p>
+            <p><strong>Lab:</strong> <span id="modal-lab"></span></p>
+            <p><strong>Status:</strong> <span id="modal-status"></span></p>
+            <p><strong>Date Created:</strong> <span id="modal-date-created"></span></p>
+            <p><strong>Description:</strong> <span id="modal-description"></span></p>
+            <p><strong>Notes:</strong> <span id="modal-notes"></span></p>
+
+            <div class="section">
+                <h3>Update Ticket</h3>
+                <label for="update-status">Update Status:</label>
+                <select id="update-status">
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In Progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                </select>
+                <button id="update-ticket-btn">Update</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Placeholder for JavaScript to handle API calls and dynamic updates -->
+    <script>
+        // JavaScript to fetch ticket list, display details, and update status.
+        // Example:
+        /*
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchTickets();
+            
+            // Get the modal, the button that opens the modal, and the <span> element that closes the modal
+            var modal = document.getElementById("ticketDetailModal");
+            var span = document.getElementsByClassName("close")[0];
+
+            // When the user clicks on <span> (x), close the modal
+            span.onclick = function() {
+                modal.style.display = "none";
+            }
+
+            // When the user clicks anywhere outside of the modal, close it
+            window.onclick = function(event) {
+                if (event.target == modal) {
+                    modal.style.display = "none";
+                }
+            }
+
+            document.getElementById('update-ticket-btn').addEventListener('click', updateTicketStatus);
+        });
+
+        function fetchTickets() {
+            // API call to get all tickets
+            // Populate #ticket-list-table-body
+            // Add event listeners for 'View' buttons
+        }
+
+        function viewTicketDetails(ticketId) {
+            // API call to get specific ticket details by ID
+            // Populate modal fields
+            // Set the current ticket ID for update
+            // Show the modal
+            var modal = document.getElementById("ticketDetailModal");
+            modal.style.display = "block";
+        }
+
+        function updateTicketStatus() {
+            // Get ticket ID and selected status
+            // API call to update ticket status
+            // Refresh ticket list or update status in the current view
+            // Close modal
+        }
+        */
+    </script>
+</body>
+</html>

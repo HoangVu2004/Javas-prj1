@@ -1,13 +1,12 @@
 package AI_PRJ.WEBAPP.service;
 
-import javax.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import AI_PRJ.WEBAPP.model.Help;
 import AI_PRJ.WEBAPP.repository.HelpRepo;
-import jakarta.transaction.Transactional;
 
 @Service
 public class HelpService {

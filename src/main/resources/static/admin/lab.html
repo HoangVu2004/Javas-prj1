@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Labs</title>
+    <link rel="stylesheet" href="css/lab.css">
+</head>
+<body>
+    <h1>Available Labs</h1>
+    <div id="lab-list"></div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/login.html';
+                return;
+            }
+
+            fetch('/api/labs', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                     window.location.href = '/login.html';
+                }
+                if (!response.ok) {
+                    throw new Error('Failed to fetch labs.');
+                }
+                return response.json();
+            })
+            .then(labs => {
+                const labList = document.getElementById('lab-list');
+                if (labs.length === 0) {
+                    labList.innerHTML = '<p>No labs available.</p>';
+                    return;
+                }
+
+                const ul = document.createElement('ul');
+                labs.forEach(lab => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <h3>${lab.title}</h3>
+                        <p>${lab.description}</p>
+                    `;
+                    ul.appendChild(li);
+                });
+                labList.appendChild(ul);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('lab-list').innerHTML = `<p>${error.message}</p>`;
+            });
+        });
+    </script>
+</body>
+</html>

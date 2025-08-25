@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import AI_PRJ.WEBAPP.dto.ApiResponse;
 import AI_PRJ.WEBAPP.model.Ship;
 import AI_PRJ.WEBAPP.service.ShipService;
 
@@ -22,7 +23,7 @@ import AI_PRJ.WEBAPP.service.ShipService;
  * =============================================
  * SHIPMENT API - QUẢN LÝ GIAO NHẬN KIT VẬT LÝ
  * =============================================
- * 
+ *
  * Phân quyền :
  * - MANAGER: Quản lý giao nhận Kit vật lý (theo dõi, cập nhật trạng thái)
  * - ADMIN: Toàn quyền
@@ -97,36 +98,11 @@ public class ShipApi {
                     .body(new ApiResponse(false, "Không tìm thấy shipment với ID: " + shipId));
             }
             
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy trạng thái shipment thành công", shipmentOpt.get()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
         }
-    }
-
-    /**
-     * Inner class for API Response
-     */
-    private static class ApiResponse {
-        private boolean success;
-        private String message;
-        private Object data;
-
-        public ApiResponse(boolean success, String message) {
-            this.success = success;
-            this.message = message;
-        }
-
-        public ApiResponse(boolean success, String message, Object data) {
-            this.success = success;
-            this.message = message;
-            this.data = data;
-        }
-
-        // Getters
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-        public Object getData() { return data; }
     }
 }

@@ -16,20 +16,21 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import AI_PRJ.WEBAPP.dto.ApiResponse;
 import AI_PRJ.WEBAPP.model.RoleName;
 import AI_PRJ.WEBAPP.model.User;
 import AI_PRJ.WEBAPP.service.UserService;
 
 /**
  * =============================================
- * USER API - QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG  
+ * USER API - QUẢN LÝ TÀI KHOẢN NGƯỜI DÙNG
  * =============================================
- * 
+ *
  * Phân quyền nghiêm ngặt theo yêu cầu đề bài:
  * - ADMIN: Toàn quyền quản lý users và phân quyền
  * - MANAGER: Quản lý tài khoản người dùng (khách hàng & nhân viên)
  * - STAFF, CUSTOMER: Chỉ xem thông tin cá nhân
- * 
+ *
  * Bảo mật:
  * - Chỉ ADMIN có thể gán/xóa roles
  * - MANAGER có thể quản lý user accounts nhưng không chỉnh sửa ADMIN
@@ -52,7 +53,7 @@ public class UserApi {
     public ResponseEntity<?> getAllUsers() {
         try {
             List<User> users = userService.getAllUsers();
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy danh sách users thành công", users));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -75,7 +76,7 @@ public class UserApi {
                     .body(new ApiResponse(false, "Không tìm thấy user với ID: " + id));
             }
             
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy thông tin user thành công", userOpt.get()));
                 
         } catch (Exception e) {
@@ -93,7 +94,7 @@ public class UserApi {
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody User user) {
         try {
             User updatedUser = userService.updateUser(id, user);
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Cập nhật user thành công", updatedUser));
                 
         } catch (Exception e) {
@@ -129,7 +130,7 @@ public class UserApi {
         try {
             RoleName roleEnum = RoleName.valueOf(roleName.toUpperCase());
             List<User> users = userService.getUsersByRole(roleEnum);
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy users theo role thành công", users));
                 
         } catch (Exception e) {
@@ -149,7 +150,7 @@ public class UserApi {
             RoleName roleName = RoleName.valueOf(roleNameStr.toUpperCase());
             User user = userService.assignRole(userId, roleName);
             
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Gán role cho user thành công", user));
                 
         } catch (Exception e) {
@@ -169,7 +170,7 @@ public class UserApi {
             RoleName roleName = RoleName.valueOf(roleNameStr.toUpperCase());
             User user = userService.removeRole(userId, roleName);
             
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Xóa role khỏi user thành công", user));
                 
         } catch (Exception e) {
@@ -189,37 +190,12 @@ public class UserApi {
             User.Status userStatus = User.Status.valueOf(status.toUpperCase());
             User user = userService.changeUserStatus(id, userStatus);
             
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Cập nhật trạng thái user thành công", user));
                 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
         }
-    }
-
-    /**
-     * Inner class for API Response
-     */
-    private static class ApiResponse {
-        private boolean success;
-        private String message;
-        private Object data;
-
-        public ApiResponse(boolean success, String message) {
-            this.success = success;
-            this.message = message;
-        }
-
-        public ApiResponse(boolean success, String message, Object data) {
-            this.success = success;
-            this.message = message;
-            this.data = data;
-        }
-
-        // Getters
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-        public Object getData() { return data; }
     }
 }

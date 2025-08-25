@@ -1,4 +1,0 @@
--------------------------------------------------------------------------------
-Test set: AI_PRJ.WEBAPP.HelpServiceTest
--------------------------------------------------------------------------------
-Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.193 s -- in AI_PRJ.WEBAPP.HelpServiceTest

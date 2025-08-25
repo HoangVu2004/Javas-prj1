@@ -1,1 +1,0 @@
-CREATE DATABASE stem_kit_db;

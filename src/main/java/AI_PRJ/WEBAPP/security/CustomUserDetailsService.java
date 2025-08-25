@@ -1,13 +1,8 @@
 package AI_PRJ.WEBAPP.security;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -31,7 +26,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     /**
      * Load user by username hoặc email
      * Spring Security sẽ gọi method này khi user login
-     * 
+     *
      * @param usernameOrEmail username hoặc email
      * @return UserDetails object chứa thông tin authentication
      * @throws UsernameNotFoundException nếu user không tồn tại
@@ -57,23 +52,7 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Tài khoản đã bị khóa hoặc chưa được kích hoạt: " + usernameOrEmail);
         }
 
-        // Convert roles thành GrantedAuthority
-        List<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority("ROLE_" + role.getName().name()))
-                .collect(Collectors.toList());
-
-        logger.info("User {} có {} roles: {}", user.getUsername(), authorities.size(), 
-                   authorities.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
-
-        // Tạo UserDetails object
-        return org.springframework.security.core.userdetails.User.builder()
-                .username(user.getUsername())
-                .password(user.getPassword())
-                .authorities(authorities)
-                .accountExpired(false)
-                .accountLocked(user.getStatus() != User.Status.ACTIVE)
-                .credentialsExpired(false)
-                .disabled(user.getStatus() != User.Status.ACTIVE)
-                .build();
+        // Tạo UserDetailsImpl object
+        return UserDetailsImpl.build(user);
     }
 }
