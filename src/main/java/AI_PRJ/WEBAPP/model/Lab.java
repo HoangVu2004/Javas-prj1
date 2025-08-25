@@ -1,13 +1,16 @@
 package AI_PRJ.WEBAPP.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore; // Added import
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "labs")
 public class Lab {
 
     @Id
@@ -24,6 +27,7 @@ public class Lab {
 
     @ManyToOne
     @JoinColumn(name = "kit_id")
+    @JsonIgnore // Added annotation
     private Kit kit;
 
     // ======= GETTERS ======= //

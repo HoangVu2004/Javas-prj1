@@ -5,6 +5,7 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType; // Added import
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,6 +30,9 @@ public class Kit {
     @Column(name = "category_id")
     private Long categoryId;
 
+    @Column(name = "image_url")
+    private String imageUrl;
+
     @Column(name = "difficulty_level")
     private String difficultyLevel;
 
@@ -39,13 +43,13 @@ public class Kit {
     private Long createdBy;
 
     // One Kit has many Labs (mapped via intermediate table)
-    @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "kit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     private List<Lab> labs;
 
     public Kit() {
     }
 
-    public Kit(Long id, String name, String description, Integer price, Integer stockQuantity, Long categoryId,
+    public Kit(Long id, String name, String description, Integer price, Integer stockQuantity, Long categoryId, String imageUrl,
            String difficultyLevel, String ageRange, Long createdBy, List<Lab> labs) {
     this.id = id;
     this.name = name;
@@ -53,6 +57,7 @@ public class Kit {
     this.price = price;
     this.stockQuantity = stockQuantity;
     this.categoryId = categoryId;
+    this.imageUrl = imageUrl;
     this.difficultyLevel = difficultyLevel;
     this.ageRange = ageRange;
     this.createdBy = createdBy;
@@ -104,6 +109,14 @@ public Long getCategoryId() {
 
 public void setCategoryId(Long categoryId) {
     this.categoryId = categoryId;
+}
+
+public String getImageUrl() {
+    return imageUrl;
+}
+
+public void setImageUrl(String imageUrl) {
+    this.imageUrl = imageUrl;
 }
 
 public String getDifficultyLevel() {

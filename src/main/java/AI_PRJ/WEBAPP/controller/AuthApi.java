@@ -26,13 +26,13 @@ public class AuthApi {
      */
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
-        try {
-            User user = authService.registerUser(signUpRequest);
-            return ResponseEntity.ok("Đăng ký thành công! Tài khoản: " + user.getUsername());
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body("Lỗi đăng ký: " + e.getMessage());
+            try {
+                User user = authService.registerUser(signUpRequest);
+                return ResponseEntity.ok(java.util.Map.of("message", "Đăng ký thành công! Tài khoản: " + user.getUsername()));
+            } catch (RuntimeException e) {
+                return ResponseEntity.badRequest().body(java.util.Map.of("message", "Lỗi đăng ký: " + e.getMessage()));
+            }
         }
-    }
 
     /**
      * API đăng nhập hệ thống
