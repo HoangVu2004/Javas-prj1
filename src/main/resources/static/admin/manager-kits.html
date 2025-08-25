@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Kits</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Manager Panel</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="manager-dashboard.html">Dashboard</a></li>
+                    <li><a href="manager-users.html">Manage Users</a></li>
+                    <li><a href="manager-kits.html" class="active">Manage Kits</a></li>
+                    <li><a href="manager-labs.html">Manage Labs</a></li>
+                    <li><a href="manager-orders.html">Manage Orders</a></li>
+                    <li><a href="manager-reports.html">Reports</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutButton" class="btn btn-logout">Logout</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Manage Kits</h1>
+                <button class="btn" onclick="openCreateModal()">Create New Kit</button>
+            </header>
+            <section class="content-area">
+                <div id="kit-list" class="card">
+                    <!-- Kit list will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- The Modal -->
+    <div id="kitModal" class="modal">
+        <div class="modal-content card">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="modal-title">Create Kit</h2>
+            <form id="kitForm">
+                <input type="hidden" id="kitId">
+                <label for="kitName">Name:</label>
+                <input type="text" id="kitName" name="name" required>
+                <label for="kitDescription">Description:</label>
+                <textarea id="kitDescription" name="description" required></textarea>
+                <label for="kitPrice">Price:</label>
+                <input type="number" id="kitPrice" name="price" step="0.01" required>
+                <label for="kitStockQuantity">Stock Quantity:</label>
+                <input type="number" id="kitStockQuantity" name="stockQuantity" required>
+                <label for="kitCategoryId">Category:</label>
+                <select id="kitCategoryId" name="categoryId" required>
+                    <option value="">-- Chọn Category --</option>
+                    <option value="1">Robotics</option>
+                    <option value="2">Electronics</option>
+                    <option value="3">Programming</option>
+                    <option value="4">Science</option>
+                    <option value="5">Engineering</option>
+                    <option value="6">IoT</option>
+                    <option value="7">AI/ML</option>
+                    <option value="8">3D Printing</option>
+                    <option value="9">Mobile App</option>
+                    <option value="10">Renewable Energy</option>
+                </select>
+
+                <label for="kitDifficultyLevel">Difficulty Level:</label>
+                <select id="kitDifficultyLevel" name="difficultyLevel" required>
+                    <option value="BEGINNER">BEGINNER</option>
+                    <option value="INTERMEDIATE">INTERMEDIATE</option>
+                    <option value="ADVANCED">ADVANCED</option>
+                </select>
+
+                <label for="kitAgeRange">Age Range:</label>
+                <input type="text" id="kitAgeRange" name="ageRange" required>
+
+                <label for="kitImageFile">Image:</label>
+                <input type="file" id="kitImageFile" name="image_file" accept="image/*">
+                <img id="kitImagePreview" src="" alt="Image Preview" style="max-width: 100px; max-height: 100px; margin-top: 10px; display: none;">
+                <button type="submit" class="btn">Save</button>
+                <button type="button" class="btn" onclick="openLinkLabModal()">Link to Lab</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Link Lab Modal -->
+    <div id="linkLabModal" class="modal">
+        <div class="modal-content card">
+            <span class="close" onclick="closeLinkLabModal()">&times;</span>
+            <h2>Link Kit to Lab</h2>
+            <form id="linkLabForm">
+                <input type="hidden" id="linkKitId">
+                <label for="labSelect">Select Lab:</label>
+                <select id="labSelect" name="labId" required>
+                    <!-- Labs will be loaded here -->
+                </select>
+                <button type="submit" class="btn">Link Lab</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Basic script setup
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/login.html';
+                return;
+            }
+            document.getElementById('logoutButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '/auth/login.html';
+            });
+
+            fetchKits();
+            document.getElementById('kitForm').addEventListener('submit', handleFormSubmit);
+        });
+
+        const modal = document.getElementById('kitModal');
+        const form = document.getElementById('kitForm');
+        const kitListDiv = document.getElementById('kit-list');
+
+        function openCreateModal() {
+            form.reset();
+            document.getElementById('kitId').value = '';
+            document.getElementById('kitImageFile').value = ''; // Clear file input
+            document.getElementById('kitImagePreview').style.display = 'none'; // Hide preview
+            document.getElementById('kitImagePreview').src = ''; // Clear preview src
+            document.getElementById('modal-title').innerText = 'Create Kit';
+            modal.style.display = 'block';
+        }
+
+        function openEditModal(kit) {
+            form.reset();
+            document.getElementById('kitId').value = kit.id;
+            document.getElementById('kitName').value = kit.name;
+            document.getElementById('kitDescription').value = kit.description;
+            document.getElementById('kitPrice').value = kit.price;
+            document.getElementById('kitStockQuantity').value = kit.stockQuantity;
+            document.getElementById('kitCategoryId').value = kit.categoryId;
+            document.getElementById('kitDifficultyLevel').value = kit.difficultyLevel;
+            document.getElementById('kitAgeRange').value = kit.ageRange;
+            document.getElementById('kitImageFile').value = ''; // Clear file input for edit
+            const imagePreview = document.getElementById('kitImagePreview');
+            if (kit.imageUrl) {
+                imagePreview.src = kit.imageUrl;
+                imagePreview.style.display = 'block';
+            } else {
+                imagePreview.style.display = 'none';
+                imagePreview.src = '';
+            }
+            document.getElementById('modal-title').innerText = 'Edit Kit';
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            modal.style.display = 'none';
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                closeModal();
+            }
+        }
+
+        function openLinkLabModal() {
+            const kitId = document.getElementById('kitId').value;
+            document.getElementById('linkKitId').value = kitId;
+            document.getElementById('linkLabModal').style.display = 'block';
+            fetchLabsForLinking(); // Function to fetch labs
+        }
+
+        function closeLinkLabModal() {
+            document.getElementById('linkLabModal').style.display = 'none';
+        }
+
+        async function fetchLabsForLinking() {
+            try {
+                const response = await fetch('/api/labs', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/auth/login.html';
+                    return;
+                }
+                if (!response.ok) throw new Error('Failed to fetch labs.');
+
+                const labs = await response.json();
+                const labSelect = document.getElementById('labSelect');
+                labSelect.innerHTML = ''; // Clear previous options
+                labs.forEach(lab => {
+                    const option = document.createElement('option');
+                    option.value = lab.id;
+                    option.innerText = lab.name;
+                    labSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching labs:', error);
+                alert('Failed to load labs for linking.');
+            }
+        }
+
+        async function handleLinkLabSubmit(event) {
+            event.preventDefault();
+            const kitId = document.getElementById('linkKitId').value;
+            const labId = document.getElementById('labSelect').value;
+
+            if (!kitId || !labId) {
+                alert('Please select a kit and a lab.');
+                return;
+            }
+
+            try {
+                // Assuming an API endpoint like /api/kits/{kitId}/linkLab/{labId}
+                const response = await fetch(`/api/kits/${kitId}/linkLab/${labId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (!response.ok) throw new Error('Failed to link kit to lab.');
+
+                alert('Kit successfully linked to lab!');
+                closeLinkLabModal();
+                fetchKits(); // Refresh kit list
+            } catch (error) {
+                console.error('Error linking kit to lab:', error);
+                alert(error.message);
+            }
+        }
+
+        async function fetchKits() {
+            try {
+                const response = await fetch('/api/kits', {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (response.status === 401 || response.status === 403) {
+                     window.location.href = '/auth/login.html';
+                     return;
+                }
+                if (!response.ok) throw new Error('Failed to fetch kits.');
+                
+                const kits = await response.json();
+                renderKits(kits);
+            } catch (error) {
+                console.error('Error:', error);
+                kitListDiv.innerHTML = `<p>${error.message}</p>`;
+            }
+        }
+
+        function renderKits(kits) {
+            kitListDiv.innerHTML = '';
+            if (!kits || kits.length === 0) {
+                kitListDiv.innerHTML = '<p>No kits available.</p>';
+                return;
+            }
+
+            const table = document.createElement('table');
+            table.className = 'data-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Description</th>
+                        <th>Price</th>
+                        <th>Stock Quantity</th>
+                        <th>Category ID</th>
+                        <th>Image</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+            kits.forEach(kit => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${kit.name}</td>
+                    <td>${kit.description}</td>
+                    <td>$${kit.price.toFixed(2)}</td>
+                    <td>${kit.stockQuantity}</td>
+                    <td>${kit.categoryId}</td>
+                    <td><img src="${kit.imageUrl || ''}" alt="Kit Image" style="width: 50px; height: 50px; object-fit: cover;"></td>
+                    <td class="actions">
+                        <button class="btn btn-edit" onclick='openEditModal(${JSON.stringify(kit)})'>Edit</button>
+                        <button class="btn btn-delete" onclick="deleteKit(${kit.id})">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+            kitListDiv.appendChild(table);
+        }
+
+        async function handleFormSubmit(event) {
+            event.preventDefault();
+            const kitId = document.getElementById('kitId').value;
+            const kitData = {
+                name: document.getElementById('kitName').value,
+                description: document.getElementById('kitDescription').value,
+                price: parseFloat(document.getElementById('kitPrice').value),
+                stockQuantity: parseInt(document.getElementById('kitStockQuantity').value),
+                categoryId: parseInt(document.getElementById('kitCategoryId').value),
+                difficultyLevel: document.getElementById('kitDifficultyLevel').value,
+                ageRange: document.getElementById('kitAgeRange').value
+            };
+
+            const imageFile = document.getElementById('kitImageFile').files[0];
+            let uploadedImageUrl = '';
+
+            // If there's an image file, upload it first
+            if (imageFile) {
+                try {
+                    uploadedImageUrl = await uploadImage(imageFile);
+                    kitData.imageUrl = uploadedImageUrl; // Add the uploaded image URL to kitData
+                } catch (uploadError) {
+                    console.error('Image upload failed:', uploadError);
+                    alert('Failed to upload image. Please try again.');
+                    return; // Stop form submission if image upload fails
+                }
+            } else if (kitId) {
+                // If editing and no new file, retain existing image URL if any
+                const existingKit = await fetch(`/api/kits/${kitId}`, {
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                }).then(res => res.json());
+                kitData.imageUrl = existingKit.imageUrl;
+            }
+
+            const method = kitId ? 'PUT' : 'POST';
+            const url = kitId ? `/api/kits/${kitId}` : '/api/kits';
+
+            try {
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(kitData)
+                });
+
+                if (!response.ok) throw new Error(`Failed to ${kitId ? 'update' : 'create'} kit.`);
+                
+                closeModal();
+                fetchKits();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+
+        async function uploadImage(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+
+            const response = await fetch('/api/kits/uploadImage', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Image upload failed: ${errorText}`);
+            }
+            const result = await response.json();
+            return result.imageUrl; // Assuming the backend returns { imageUrl: "path/to/image.jpg" }
+        }
+
+        async function deleteKit(kitId) {
+            if (!confirm('Are you sure you want to delete this kit?')) return;
+            
+            try {
+                const response = await fetch(`/api/kits/${kitId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+                });
+                if (!response.ok) throw new Error('Failed to delete kit.');
+                
+                fetchKits();
+            } catch (error) {
+                console.error('Error:', error);
+                alert(error.message);
+            }
+        }
+    </script>
+</body>
+</html>

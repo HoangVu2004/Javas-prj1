@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bảng Điều Khiển Hỗ Trợ</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Hệ Thống Hỗ Trợ</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="staff-dashboard.html" class="active">Bảng Điều Khiển</a></li>
+                    <li><a href="help.html">Quản Lý Ticket</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutButton" class="btn btn-logout">Đăng Xuất</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Bảng Điều Khiển Hỗ Trợ Kỹ Thuật</h1>
+                <div class="user-info">
+                    <span>Chào mừng, <strong id="username">Nhân Viên Hỗ Trợ</strong>!</span>
+                </div>
+            </header>
+            
+            <section class="stats-cards">
+                <div class="card">
+                    <h4>Tổng Số Ticket</h4>
+                    <p id="total-tickets">0</p>
+                </div>
+                <div class="card">
+                    <h4>Ticket Đang Mở</h4>
+                    <p id="open-tickets">0</p>
+                </div>
+                <div class="card">
+                    <h4>Ticket Đang Xử Lý</h4>
+                    <p id="inprogress-tickets">0</p>
+                </div>
+                <div class="card">
+                    <h4>Ticket Đã Đóng</h4>
+                    <p id="closed-tickets">0</p>
+                </div>
+            </section>
+
+            <section class="recent-activity">
+                <h2>Ticket Mới Nhất</h2>
+                <div id="recent-tickets" class="card">
+                    <p>Đang tải ticket gần đây...</p>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/login.html';
+                return;
+            }
+
+            // Decode JWT to get user info
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                document.getElementById('username').textContent = payload.sub;
+            } catch (e) {
+                console.error('Failed to decode token:', e);
+            }
+
+            document.getElementById('logoutButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '/auth/login.html';
+            });
+
+            // Load dashboard statistics
+            loadDashboardStats();
+        });
+
+        function loadDashboardStats() {
+            fetch('/api/support/all', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/auth/login.html';
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error('Không thể tải thống kê');
+                }
+                return response.json();
+            })
+            .then(tickets => {
+                // Update statistics
+                document.getElementById('total-tickets').textContent = tickets.length;
+                
+                const openTickets = tickets.filter(t => t.status === 'OPEN').length;
+                const inProgressTickets = tickets.filter(t => t.status === 'IN_PROGRESS').length;
+                const closedTickets = tickets.filter(t => t.status === 'CLOSED').length;
+                
+                document.getElementById('open-tickets').textContent = openTickets;
+                document.getElementById('inprogress-tickets').textContent = inProgressTickets;
+                document.getElementById('closed-tickets').textContent = closedTickets;
+
+                // Show recent tickets
+                const recentTickets = tickets.slice(0, 5); // Show last 5 tickets
+                const recentTicketsDiv = document.getElementById('recent-tickets');
+                
+                if (recentTickets.length === 0) {
+                    recentTicketsDiv.innerHTML = '<p>Chưa có ticket nào</p>';
+                    return;
+                }
+
+                let html = '';
+                recentTickets.forEach(ticket => {
+                    html += `
+                        <div style="border-bottom: 1px solid #eee; padding: 10px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>${ticket.user}</strong>
+                                <span class="status-${ticket.status?.toLowerCase() || 'open'}">
+                                    ${getStatusText(ticket.status)}
+                                </span>
+                            </div>
+                            <div>Lab: ${ticket.lab}</div>
+                            <div style="margin-top: 5px; color: #666;">
+                                ${ticket.content ? ticket.content.substring(0, 100) + '...' : 'Không có nội dung'}
+                            </div>
+                            <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                ${new Date(ticket.createdAt).toLocaleString('vi-VN')}
+                            </div>
+                        </div>
+                    `;
+                });
+                recentTicketsDiv.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('recent-tickets').innerHTML = `<p>Lỗi khi tải dữ liệu: ${error.message}</p>`;
+            });
+        }
+
+        function getStatusText(status) {
+            switch(status) {
+                case 'OPEN': return 'Đang mở';
+                case 'IN_PROGRESS': return 'Đang xử lý';
+                case 'CLOSED': return 'Đã đóng';
+                default: return 'Chưa xác định';
+            }
+        }
+    </script>
+
+    <style>
+        .status-open { color: #d9534f; font-weight: bold; }
+        .status-in_progress { color: #f0ad4e; font-weight: bold; }
+        .status-closed { color: #5cb85c; font-weight: bold; }
+        .status-undefined { color: #6c757d; font-weight: bold; }
+    </style>
+</body>
+</html>

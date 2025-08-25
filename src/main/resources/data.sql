@@ -30,7 +30,12 @@ INSERT INTO categories (name, description) VALUES
 ('Electronics', 'Kit học tập điện tử, mạch điện'),
 ('Programming', 'Kit học lập trình, coding'),
 ('Science', 'Kit thí nghiệm khoa học'),
-('Engineering', 'Kit kỹ thuật, xây dựng');
+('Engineering', 'Kit kỹ thuật, xây dựng'),
+('IoT', 'Kit Internet of Things và thiết bị thông minh'),
+('AI/ML', 'Kit trí tuệ nhân tạo và machine learning'),
+('3D Printing', 'Kit in 3D và thiết kế mô hình'),
+('Mobile App', 'Kit phát triển ứng dụng di động'),
+('Renewable Energy', 'Kit năng lượng tái tạo');
 
 -- 5. THÊM KITS
 INSERT INTO kits (name, description, price, stock_quantity, category_id, difficulty_level, age_range, created_by) VALUES 

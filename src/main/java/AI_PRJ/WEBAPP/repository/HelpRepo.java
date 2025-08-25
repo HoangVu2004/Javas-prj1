@@ -8,4 +8,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface HelpRepo extends JpaRepository<Help, HelpId> {
     Help findByUserAndLab(String user, String lab);
+    
+    // New method to find all responses for a specific ticket
+    java.util.List<Help> findAllByUserAndLab(String user, String lab);
 }
