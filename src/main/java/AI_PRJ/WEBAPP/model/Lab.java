@@ -26,6 +26,8 @@ public class Lab {
     @JoinColumn(name = "kit_id")
     private Kit kit;
 
+    private boolean isActive = false;
+
     // ======= GETTERS ======= //
     public Long getId() {
         return id;
@@ -63,6 +65,10 @@ public class Lab {
         return kit;
     }
 
+    public boolean isActive() {
+        return isActive;
+    }
+
     // ======= SETTERS ======= //
     public void setTitle(String title) {
         this.title = title;
@@ -94,5 +100,9 @@ public class Lab {
 
     public void setKit(Kit kit) {
         this.kit = kit;
+    }
+
+    public void setActive(boolean active) {
+        isActive = active;
     }
 }

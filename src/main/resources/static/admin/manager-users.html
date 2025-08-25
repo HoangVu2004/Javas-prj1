@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Users</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Manager Panel</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="manager-dashboard.html">Dashboard</a></li>
+                    <li><a href="manager-users.html" class="active">Manage Users</a></li>
+                    <li><a href="manager-kits.html">Manage Kits</a></li>
+                    <li><a href="manager-labs.html">Manage Labs</a></li>
+                    <li><a href="manager-orders.html">Manage Orders</a></li>
+                    <li><a href="manager-reports.html">Reports</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutButton" class="btn btn-logout">Logout</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Manage Users</h1>
+            </header>
+            <section class="content-area">
+                <div class="card">
+                    <h2>User Management</h2>
+                    <div class="user-form">
+                        <h3>Add/Edit User</h3>
+                        <input type="hidden" id="user-id">
+                        <input type="text" id="username" placeholder="Username">
+                        <input type="email" id="email" placeholder="Email">
+                        <input type="password" id="password" placeholder="Password">
+                        <select id="role">
+                            <option value="Admin">Admin</option>
+                            <option value="Editor">Editor</option>
+                            <option value="Subscriber">Subscriber</option>
+                        </select>
+                        <button id="saveUserButton">Save User</button>
+                        <button id="cancelButton">Cancel</button>
+                    </div>
+                    <div id="user-list" class="card">
+                        <!-- User list will be loaded here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        let token = localStorage.getItem('token'); // Declare token in a higher scope
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!token) {
+                window.location.href = '/auth/login.html';
+                return;
+            }
+            document.getElementById('logoutButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '/auth/login.html';
+            });
+
+            fetchUsers();
+        });
+
+        const userListDiv = document.getElementById('user-list');
+        const userIdInput = document.getElementById('user-id');
+        const usernameInput = document.getElementById('username');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const roleInput = document.getElementById('role');
+        const saveUserButton = document.getElementById('saveUserButton');
+        const cancelButton = document.getElementById('cancelButton');
+
+        let users = []; // Array to hold user data
+
+        async function fetchUsers() {
+            try {
+                const response = await fetch('/api/users', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                if (data.success && data.data) {
+                    users = data.data;
+                } else {
+                    console.error("Failed to fetch users:", data.message);
+                    users = []; // Clear users if fetch fails
+                }
+            } catch (error) {
+                console.error("Error fetching users:", error);
+                users = []; // Clear users on network or parsing error
+            }
+            displayUsers(users);
+        }
+
+        function displayUsers(users) {
+            let userListHTML = '<table>';
+            userListHTML += '<thead><tr><th>ID</th><th>Username</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>';
+            userListHTML += '<tbody>';
+            users.forEach(user => {
+                userListHTML += `<tr>
+                                    <td>${user.id}</td>
+                                    <td>${user.username}</td>
+                                    <td>${user.email}</td>
+                                    <td>${user.roles && user.roles.length > 0 ? user.roles[0].name : 'No Role'}</td>
+                                    <td>
+                                        <button onclick="editUser(${user.id})">Edit</button>
+                                        <button onclick="deleteUser(${user.id})">Delete</button>
+                                    </td>
+                                </tr>`;
+            });
+            userListHTML += '</tbody></table>';
+            userListDiv.innerHTML = userListHTML;
+        }
+
+        function addUser() {
+            const newUser = {
+                id: users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1, // Simple ID generation
+                username: usernameInput.value,
+                email: emailInput.value,
+                password: passwordInput.value, // In a real app, hash this
+                role: roleInput.value
+            };
+            users.push(newUser);
+            displayUsers(users);
+            clearForm();
+        }
+
+        function editUser(id) {
+            const user = users.find(u => u.id === id);
+            if (user) {
+                userIdInput.value = user.id;
+                usernameInput.value = user.username;
+                emailInput.value = user.email;
+                passwordInput.value = ''; // Don't pre-fill password for security
+                roleInput.value = user.role;
+            }
+        }
+
+        function deleteUser(id) {
+            users = users.filter(u => u.id !== id);
+            displayUsers(users);
+        }
+
+        function clearForm() {
+            userIdInput.value = '';
+            usernameInput.value = '';
+            emailInput.value = '';
+            passwordInput.value = '';
+            roleInput.value = 'Admin'; // Default role
+        }
+
+        saveUserButton.addEventListener('click', function() {
+            if (userIdInput.value) {
+                // Edit existing user
+                const userIndex = users.findIndex(u => u.id === parseInt(userIdInput.value));
+                if (userIndex > -1) {
+                    users[userIndex] = {
+                        id: parseInt(userIdInput.value),
+                        username: usernameInput.value,
+                        email: emailInput.value,
+                        password: passwordInput.value || users[userIndex].password, // Keep old password if not changed
+                        role: roleInput.value
+                    };
+                    displayUsers(users);
+                    clearForm();
+                }
+            } else {
+                // Add new user
+                addUser();
+            }
+        });
+
+        cancelButton.addEventListener('click', clearForm);
+
+    </script>
+</body>
+</html>

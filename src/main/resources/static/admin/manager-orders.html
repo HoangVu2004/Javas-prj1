@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Manager Panel</h3>
+            </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="manager-dashboard.html">Dashboard</a></li>
+                    <li><a href="manager-users.html">Manage Users</a></li>
+                    <li><a href="manager-kits.html">Manage Kits</a></li>
+                    <li><a href="manager-labs.html">Manage Labs</a></li>
+                    <li><a href="manager-orders.html" class="active">Manage Orders</a></li>
+                    <li><a href="manager-reports.html">Reports</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutButton" class="btn btn-logout">Logout</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Manage Orders</h1>
+            </header>
+            <section class="content-area">
+                <div id="order-list" class="card">
+                    <!-- Order list will be loaded here -->
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/login.html';
+                return;
+            }
+            document.getElementById('logoutButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '/auth/login.html';
+            });
+
+            fetchOrders();
+        });
+
+        const orderListDiv = document.getElementById('order-list');
+
+        async function fetchOrders() {
+            const token = localStorage.getItem('token');
+            try {
+                const response = await fetch('/api/shipments', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to fetch orders');
+                }
+                const result = await response.json();
+                if (result.success) {
+                    displayOrders(result.data);
+                } else {
+                    orderListDiv.innerHTML = `<p>Error: ${result.message}</p>`;
+                }
+            } catch (error) {
+                orderListDiv.innerHTML = `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        function displayOrders(orders) {
+            let orderListHTML = '<table>';
+            orderListHTML += '<thead><tr><th>ID</th><th>User ID</th><th>Kit ID</th><th>Created At</th><th>Status</th><th>Action</th></tr></thead>';
+            orderListHTML += '<tbody>';
+            orders.forEach(order => {
+                orderListHTML += `<tr>
+                                    <td>${order.id}</td>
+                                    <td>${order.userId}</td>
+                                    <td>${order.kitId}</td>
+                                    <td>${new Date(order.createdAt).toLocaleString()}</td>
+                                    <td>${order.status}</td>
+                                    <td>
+                                        <select id="status-select-${order.id}">
+                                            <option value="PENDING" ${order.status === 'PENDING' ? 'selected' : ''}>Pending</option>
+                                            <option value="DELIVERED" ${order.status === 'DELIVERED' ? 'selected' : ''}>Delivered</option>
+                                        </select>
+                                        <button onclick="updateStatus(${order.id})">Update</button>
+                                    </td>
+                                </tr>`;
+            });
+            orderListHTML += '</tbody></table>';
+            orderListDiv.innerHTML = orderListHTML;
+        }
+
+        async function updateStatus(shipId) {
+            const token = localStorage.getItem('token');
+            const statusSelect = document.getElementById(`status-select-${shipId}`);
+            const newStatus = statusSelect.value;
+
+            try {
+                const response = await fetch(`/api/shipments/${shipId}/status?status=${newStatus}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error('Failed to update status');
+                }
+                const result = await response.json();
+                if (result.success) {
+                    alert('Status updated successfully');
+                    fetchOrders();
+                } else {
+                    alert(`Error: ${result.message}`);
+                }
+            } catch (error) {
+                alert(`Error: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
