@@ -59,8 +59,7 @@ public class JwtUtils {
     }
 
     private Key key() {
-        // Sử dụng trực tiếp secret key không cần decode Base64
-        return Keys.hmacShaKeyFor(jwtSecret.getBytes());
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));
     }
 
     public String getUserNameFromJwtToken(String token) {

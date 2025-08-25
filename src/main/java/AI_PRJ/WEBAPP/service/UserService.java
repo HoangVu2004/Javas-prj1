@@ -48,6 +48,11 @@ public class UserService {
      * @param username Tên đăng nhập
      * @return Optional<User>
      */
+    public User findByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found: " + username));
+    }
+
     public Optional<User> getUserByUsername(String username) {
         return userRepository.findByUsername(username);
     }
