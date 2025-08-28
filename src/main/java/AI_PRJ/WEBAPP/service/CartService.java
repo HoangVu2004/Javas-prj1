@@ -39,13 +39,13 @@ public class CartService {
     }
 
     @Transactional
-    public void addItemToCart(User user, Long kitId, int quantity) {
+    public void addItemToCart(User user, Long productId, int quantity) {
         Cart cart = getCart(user);
-        Kit kit = kitRepository.findById(kitId)
-                .orElseThrow(() -> new IllegalArgumentException("Kit not found with ID: " + kitId));
+        Kit kit = kitRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Kit not found with ID: " + productId));
 
         Optional<CartItem> existingItem = cart.getItems().stream()
-                .filter(item -> item.getKit().getId().equals(kitId))
+                .filter(item -> item.getKit().getId().equals(productId))
                 .findFirst();
 
         if (existingItem.isPresent()) {

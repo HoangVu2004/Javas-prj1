@@ -24,6 +24,7 @@ public class CartController {
 
     private User getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        
         if (authentication == null || !authentication.isAuthenticated() 
             || authentication.getPrincipal().equals("anonymousUser")) {
             throw new IllegalStateException("User not authenticated");
