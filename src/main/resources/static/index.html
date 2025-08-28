@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to STEM Kit Lab</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>STEM Kit Lab</h1>
+            <span id="welcomeMessage" style="margin-left: 20px; color: white;"></span>
+            <button id="logoutButton" style="display: none; margin-left: 20px;">Logout</button>
+            <nav>
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="../public/products.html">All Kits</a></li>
+                    <li><a href="../public/cart.html">Cart</a></li>
+                    <li><a href="../auth/login.html" id="loginLink">Login</a></li>
+                    <li id="managerDashboardNavItem" style="display: none;"><a href="../admin/manager-dashboard.html">Manager Dashboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h2>Our Kits</h2>
+            <section id="kit-list" class="product-grid">
+                <!-- Kits will be dynamically loaded here -->
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2024 STEM Kit Lab. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkLoginStatus();
+            fetchKits();
+        });
+
+        function checkLoginStatus() {
+            const token = localStorage.getItem('token');
+            const welcomeMessageSpan = document.getElementById('welcomeMessage');
+            const loginLink = document.getElementById('loginLink');
+            const logoutButton = document.getElementById('logoutButton');
+            const managerNavItem = document.getElementById('managerDashboardNavItem');
+
+            if (token) {
+                const username = localStorage.getItem('username');
+                if (username) {
+                    welcomeMessageSpan.textContent = `Welcome, ${username}`;
+                } else {
+                    welcomeMessageSpan.textContent = 'Welcome!';
+                }
+                if (logoutButton) {
+                    logoutButton.style.display = 'inline-block';
+                }
+                if (loginLink) {
+                    loginLink.style.display = 'none';
+                }
+
+                // Attempt to get role from localStorage directly, or from a user object if available
+                let userRole = localStorage.getItem('role');
+                if (!userRole) {
+                    const user = localStorage.getItem('user');
+                    if (user) {
+                        try {
+                            const userData = JSON.parse(user);
+                            userRole = userData.role;
+                        } catch (e) {
+                            console.error("Failed to parse user data from localStorage:", e);
+                            userRole = null; // Ensure userRole is null if parsing fails
+                        }
+                    }
+                }
+
+                if (userRole === 'ADMIN' || userRole === 'MANAGER') {
+                    if (managerNavItem) {
+                        managerNavItem.style.display = 'block';
+                    }
+                } else {
+                    if (managerNavItem) {
+                        managerNavItem.style.display = 'none';
+                    }
+                }
+
+            } else {
+                welcomeMessageSpan.textContent = '';
+                if (logoutButton) {
+                    logoutButton.style.display = 'none';
+                }
+                if (loginLink) {
+                    loginLink.style.display = 'block';
+                }
+                if (managerNavItem) {
+                    managerNavItem.style.display = 'none';
+                }
+            }
+        }
+
+        async function fetchKits() {
+            const kitListSection = document.getElementById('kit-list');
+
+            try {
+                const response = await fetch('/api/kits');
+                if (!response.ok) {
+                    throw new Error('Failed to fetch kits.');
+                }
+                const kits = await response.json();
+                renderKits(kits);
+            } catch (error) {
+                console.error('Error:', error);
+                kitListSection.innerHTML = `<p>Could not load kits at this time. Please try again later.</p>`;
+            }
+        }
+
+        function renderKits(kits) {
+            const kitListSection = document.getElementById('kit-list');
+            kitListSection.innerHTML = ''; // Clear previous list
+
+            if (!kits || kits.length === 0) {
+                kitListSection.innerHTML = '<p>No kits available at the moment.</p>';
+                return;
+            }
+
+            kits.forEach(kit => {
+                const kitCard = document.createElement('div');
+                kitCard.className = 'card'; // Use the card style from style.css
+                kitCard.innerHTML = `
+                    <h3>${kit.name}</h3>
+                    <p>${kit.description}</p>
+                    <p><strong>Price:</strong> $${kit.price.toFixed(2)}</p>
+                    <a href="../public/product-detail.html?id=${kit.id}" class="btn">View Details</a>
+                `;
+                kitListSection.appendChild(kitCard);
+            });
+        }
+
+        // Add logout functionality
+        const logoutButton = document.getElementById('logoutButton');
+        if (logoutButton) {
+            logoutButton.addEventListener('click', () => {
+                localStorage.removeItem('token');
+                localStorage.removeItem('username');
+                localStorage.removeItem('role'); // Also remove role on logout
+                window.location.href = '/index.html'; // Redirect to home or login page
+            });
+        }
+    </script>
+</body>
+</html>

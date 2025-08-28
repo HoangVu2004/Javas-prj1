@@ -1,9 +1,7 @@
 package AI_PRJ.WEBAPP.model;
 
 /**
- * =============================================
- * ENUM: ROLES TRONG HỆ THỐNG STEM KIT
- * =============================================
+
  *
  *  ADMIN: Quản trị viên hệ thống
  *    - Quản lý toàn bộ hệ thống

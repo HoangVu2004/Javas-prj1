@@ -2,6 +2,7 @@ package AI_PRJ.WEBAPP.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import AI_PRJ.WEBAPP.model.Role;
 import AI_PRJ.WEBAPP.model.RoleName;
 import AI_PRJ.WEBAPP.model.User;
 import AI_PRJ.WEBAPP.service.UserService;
@@ -191,6 +193,40 @@ public class UserApi {
             
             return ResponseEntity.ok(new ApiResponse(true, 
                 "Cập nhật trạng thái user thành công", user));
+                
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Lấy tất cả roles của user theo ID
+     * Truy cập: ADMIN, MANAGER (quản lý users), hoặc chính user đó
+     */
+    @GetMapping("/{userId}/roles")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER') or authentication.name == @userService.getUserById(#userId).orElse(new AI_PRJ.WEBAPP.model.User()).username")
+    public ResponseEntity<?> getUserRoles(@PathVariable Long userId) {
+        try {
+            Optional<User> userOpt = userService.getUserById(userId);
+            
+            if (userOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, "Không tìm thấy user với ID: " + userId));
+            }
+            
+            User user = userOpt.get();
+            
+            // Tạo response chỉ chứa thông tin roles
+            var roleResponse = new Object() {
+                public final Long userId = user.getId();
+                public final String username = user.getUsername();
+                public final String email = user.getEmail();
+                public final Set<Role> roles = user.getRoles();
+            };
+            
+            return ResponseEntity.ok(new ApiResponse(true,
+                "Lấy roles của user thành công", roleResponse));
                 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

@@ -55,7 +55,7 @@ public class ShipApi {
     }
 
     /**
-     * Cập nhật trạng thái shipment (quan trọng cho business logic)
+     * Cập nhật trạng thái shipment 
      * Truy cập: ADMIN, MANAGER (quản lý giao nhận)
      */
     @PutMapping("/{shipId}/status")
