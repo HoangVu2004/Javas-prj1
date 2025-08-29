@@ -116,6 +116,11 @@ public class Lab {
         this.kit = kit;
     }
 
+
+    public void setActive(boolean active) {
+        this.status = active ? LabStatus.ACTIVE : LabStatus.INACTIVE;
+    }
+
     public void setStatus(LabStatus status) {
         this.status = status;
     }

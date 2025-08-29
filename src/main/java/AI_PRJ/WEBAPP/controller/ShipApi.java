@@ -1,11 +1,15 @@
 package AI_PRJ.WEBAPP.controller;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import AI_PRJ.WEBAPP.security.UserPrincipal;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -63,7 +67,14 @@ public class ShipApi {
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<?> updateShipmentStatus(@PathVariable Integer shipId, @RequestParam String status) {
         try {
-            Ship.ShipStatus shipStatus = Ship.ShipStatus.valueOf(status.toUpperCase());
+            Ship.ShipStatus shipStatus;
+            try {
+                shipStatus = Ship.ShipStatus.valueOf(status.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ApiResponse(false, "Trạng thái không hợp lệ: " + status));
+            }
+
             Ship updatedShipment = shipService.updateShipmentStatus(shipId, shipStatus);
             
             if (updatedShipment == null) {
@@ -97,6 +108,18 @@ public class ShipApi {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(new ApiResponse(false, "Không tìm thấy shipment với ID: " + shipId));
             }
+
+            // Kiểm tra quyền sở hữu cho CUSTOMER
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"))) {
+                UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
+                Long currentUserId = userPrincipal.getId();
+                Long shipUserId = shipmentOpt.get().getUserId().longValue();
+                if (!currentUserId.equals(shipUserId)) {
+                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ApiResponse(false, "Bạn không có quyền xem thông tin giao hàng này."));
+                }
+            }
             
             return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy trạng thái shipment thành công", shipmentOpt.get()));
@@ -106,6 +129,22 @@ public class ShipApi {
         }
     }
 
+
+    /**
+     * Lấy danh sách tất cả shipments
+     * Truy cập: ADMIN, MANAGER
+     */
+    @GetMapping
+    @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
+    public ResponseEntity<?> getAllShipments() {
+        try {
+            List<Ship> shipments = shipService.getAllShipments();
+            return ResponseEntity.ok(new ApiResponse(true, "Lấy danh sách shipment thành công", shipments));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
+        }
+    }
 
     /**
      * Inner class for API Response

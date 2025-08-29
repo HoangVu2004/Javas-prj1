@@ -1,5 +1,7 @@
 package AI_PRJ.WEBAPP.model;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -9,7 +11,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "ship")
+@Table(name = "deliveries")
 public class Ship {
 
     @Id
@@ -22,6 +24,8 @@ public class Ship {
 
     @Enumerated(EnumType.STRING)
     private ShipStatus status;
+
+    private LocalDateTime createdAt;
 
     public enum ShipStatus {
         PENDING,
@@ -58,5 +62,13 @@ public class Ship {
 
     public void setStatus(ShipStatus status) {
         this.status = status;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
     }
 }
