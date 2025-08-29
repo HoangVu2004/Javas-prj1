@@ -68,17 +68,17 @@ public class WebSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Public endpoints (không cần JWT)
                         .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/signup").permitAll()
-                        .requestMatchers("/api/test/**").permitAll()
-                        .requestMatchers("/index.html", "/auth/**", "/index.html", "/public/products.html",
-                                "/public/product-detail.html", "/**")
-                        .permitAll()
-
                         .requestMatchers(HttpMethod.POST, "/auth/forgot-password", "/auth/reset-password").permitAll()
-                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico").permitAll()
+                        .requestMatchers("/api/test/**").permitAll()
+                        .requestMatchers("/index.html", "/auth/**", "/public/products.html",
+                                "/public/product-detail.html", "/auth/*.html")
+                        .permitAll()
+                        .requestMatchers("/css/**", "/js/**", "/images/**", "/favicon.ico", "/uploads/images/**").permitAll()
                         // Ensure root path is accessible without login
                         .requestMatchers("/").permitAll()
-                        // .requestMatchers("/api/labs/**").permitAll() // Allow access to labs without
-                        // auth
+                        // Public access to view all labs and specific lab details
+                        .requestMatchers(HttpMethod.GET, "/api/labs").hasAnyRole("ADMIN", "MANAGER", "STAFF")
+                        .requestMatchers(HttpMethod.GET, "/api/labs/{id}").hasAnyRole("ADMIN", "MANAGER", "STAFF")
 
                         // User management endpoints - phân quyền theo role
                         .requestMatchers(HttpMethod.GET, "/api/users").hasRole("ADMIN")
@@ -94,8 +94,11 @@ public class WebSecurityConfig {
                         .requestMatchers(HttpMethod.PUT, "/api/users/*/status/**").hasAnyRole("ADMIN", "MANAGER")
                         .requestMatchers(HttpMethod.GET, "/api/users/role/**").hasAnyRole("ADMIN", "MANAGER")
 
-                        // Quản lý KIT và LAB
-                        .requestMatchers("/api/labs/**").hasAnyRole("ADMIN", "MANAGER")
+                        // Quản lý KIT và LAB (ADMIN, MANAGER)
+                        // Các API GET đã được định nghĩa ở trên
+                        .requestMatchers(HttpMethod.POST, "/api/labs").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.PUT, "/api/labs/**").hasAnyRole("ADMIN", "MANAGER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/labs/**").hasAnyRole("ADMIN", "MANAGER")
 
                         // Quản lý giao nhận
                         .requestMatchers("/api/shipments/**").hasAnyRole("ADMIN", "MANAGER")

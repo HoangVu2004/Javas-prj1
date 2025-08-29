@@ -1,5 +1,6 @@
 package AI_PRJ.WEBAPP.controller;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import AI_PRJ.WEBAPP.dto.ApiResponse;
 import AI_PRJ.WEBAPP.model.Lab;
 import AI_PRJ.WEBAPP.repository.KitRepo;
 import AI_PRJ.WEBAPP.repository.LabRepo;
@@ -27,12 +29,12 @@ import AI_PRJ.WEBAPP.repository.LabRepo;
  * =============================================
  * LAB CONTROLLER - QUẢN LÝ BÀI LAB STEM
  * =============================================
- * 
+ *
  * Phân quyền theo vai trò:
  * - ADMIN, MANAGER: Full CRUD operations
  * - STAFF: Xem Labs để hỗ trợ khách hàng
  * - CUSTOMER: Chỉ xem Labs của KIT đã mua (cần implement business logic)
- * 
+ *
  * Business Logic quan trọng:
  * - Lab chỉ được kích hoạt khi KIT đã giao thành công
  * - Customer chỉ truy cập được Lab của KIT đã mua
@@ -63,6 +65,12 @@ public class LabController {
 
             return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy danh sách Labs thành công", responseData));
+
+            Map<String, Object> responseData = new HashMap<>();
+            responseData.put("content", labs);
+
+            return ResponseEntity.ok(new ApiResponse(true,
+                "Lấy danh sách Labs thành công", responseData));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
@@ -84,7 +92,7 @@ public class LabController {
                     .body(new ApiResponse(false, "Không tìm thấy Lab với ID: " + id));
             }
             
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy thông tin Lab thành công", lab.get()));
                 
         } catch (Exception e) {
@@ -114,7 +122,7 @@ public class LabController {
             }
             
             // TEMPORARY: Trả về labs (cần implement business logic)
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy Labs của bạn thành công", labs));
                 
         } catch (Exception e) {
@@ -180,7 +188,7 @@ public class LabController {
             }
 
             List<Lab> updatedLabs = labRepository.saveAll(labs);
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Cập nhật Labs thành công", updatedLabs));
                 
         } catch (Exception e) {
@@ -227,37 +235,12 @@ public class LabController {
             }
             
             // Trả về thông tin Lab để STAFF có thể hỗ trợ
-            return ResponseEntity.ok(new ApiResponse(true, 
+            return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy thông tin Lab để hỗ trợ thành công", lab.get()));
                 
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
         }
-    }
-
-    /**
-     * Inner class for API Response
-     */
-    private static class ApiResponse {
-        private boolean success;
-        private String message;
-        private Object data;
-
-        public ApiResponse(boolean success, String message) {
-            this.success = success;
-            this.message = message;
-        }
-
-        public ApiResponse(boolean success, String message, Object data) {
-            this.success = success;
-            this.message = message;
-            this.data = data;
-        }
-
-        // Getters
-        public boolean isSuccess() { return success; }
-        public String getMessage() { return message; }
-        public Object getData() { return data; }
     }
 }

@@ -1,17 +1,22 @@
 package AI_PRJ.WEBAPP.model;
 
 import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.Objects;
 
 @Entity
 @Table(name = "cart_items")
+@Getter
+@Setter
 public class CartItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "cart_id", nullable = false)
     private Cart cart;
 
@@ -28,38 +33,6 @@ public class CartItem {
     public CartItem(Cart cart, Kit kit, int quantity) {
         this.cart = cart;
         this.kit = kit;
-        this.quantity = quantity;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Cart getCart() {
-        return cart;
-    }
-
-    public void setCart(Cart cart) {
-        this.cart = cart;
-    }
-
-    public Kit getKit() {
-        return kit;
-    }
-
-    public void setKit(Kit kit) {
-        this.kit = kit;
-    }
-
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
         this.quantity = quantity;
     }
 

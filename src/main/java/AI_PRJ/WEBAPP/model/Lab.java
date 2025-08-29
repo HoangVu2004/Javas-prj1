@@ -1,7 +1,10 @@
 package AI_PRJ.WEBAPP.model;
 
+import jakarta.persistence.Column;
 import com.fasterxml.jackson.annotation.JsonIgnore; // Added import
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,6 +32,15 @@ public class Lab {
     @JoinColumn(name = "kit_id")
     @JsonIgnore // Added annotation
     private Kit kit;
+
+    public enum LabStatus {
+        ACTIVE,
+        INACTIVE
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(columnDefinition = "ENUM('ACTIVE', 'INACTIVE') DEFAULT 'ACTIVE'")
+    private LabStatus status = LabStatus.ACTIVE;
 
     // ======= GETTERS ======= //
     public Long getId() {
@@ -67,6 +79,10 @@ public class Lab {
         return kit;
     }
 
+    public LabStatus getStatus() {
+        return status;
+    }
+
     // ======= SETTERS ======= //
     public void setTitle(String title) {
         this.title = title;
@@ -98,5 +114,9 @@ public class Lab {
 
     public void setKit(Kit kit) {
         this.kit = kit;
+    }
+
+    public void setStatus(LabStatus status) {
+        this.status = status;
     }
 }

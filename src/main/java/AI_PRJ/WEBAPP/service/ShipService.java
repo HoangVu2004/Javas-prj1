@@ -1,14 +1,15 @@
 package AI_PRJ.WEBAPP.service;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import AI_PRJ.WEBAPP.model.Lab;
 import AI_PRJ.WEBAPP.model.Ship;
 import AI_PRJ.WEBAPP.repository.LabRepo;
 import AI_PRJ.WEBAPP.repository.ShipRepo;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Optional;
 
 @Service
 public class ShipService {
@@ -41,9 +42,10 @@ public class ShipService {
     }
 
     private void activateLabsForKit(Integer kitId) {
-
         List<Lab> labs = labRepo.findByKitId(kitId.longValue());
         for (Lab lab : labs) {
+            lab.setStatus(Lab.LabStatus.ACTIVE); // Set status to ACTIVE
+            labRepo.save(lab); // Save the updated lab
             System.out.println("Activating lab: " + lab.getTitle());
         }
     }

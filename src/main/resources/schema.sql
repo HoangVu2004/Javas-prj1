@@ -15,13 +15,21 @@ DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS roles;
 
--- 1. BẢNG ROLES (vai trò người dùng)
-CREATE TABLE roles (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(50) NOT NULL UNIQUE,
-    description VARCHAR(255),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+-- Bảng help (từ create_database.sql)
+CREATE TABLE IF NOT EXISTS help (
+    user_id VARCHAR(255) NOT NULL,
+    lab_id VARCHAR(255) NOT NULL,
+    support_count INT NOT NULL DEFAULT 0,
+    PRIMARY KEY (user_id, lab_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+ 
+ -- 1. BẢNG ROLES (vai trò người dùng)
+ CREATE TABLE roles (
+     id BIGINT AUTO_INCREMENT PRIMARY KEY,
+     name VARCHAR(50) NOT NULL UNIQUE,
+     description VARCHAR(255),
+     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 2. BẢNG USERS (người dùng)
 CREATE TABLE users (
