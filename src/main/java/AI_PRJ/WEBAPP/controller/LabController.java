@@ -66,11 +66,8 @@ public class LabController {
             return ResponseEntity.ok(new ApiResponse(true,
                 "Lấy danh sách Labs thành công", responseData));
 
-            Map<String, Object> responseData = new HashMap<>();
-            responseData.put("content", labs);
 
-            return ResponseEntity.ok(new ApiResponse(true,
-                "Lấy danh sách Labs thành công", responseData));
+           
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
