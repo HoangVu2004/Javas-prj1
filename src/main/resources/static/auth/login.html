@@ -21,6 +21,7 @@
             </div>
             <button type="submit" class="btn btn-primary btn-block">Login</button>
         </form>
+        <button type="button" id="staffDashboardBtn" class="btn btn-secondary btn-block" style="display: none;">Staff Dashboard</button>
         <p class="text-center mt-3">
             <a href="register.html">không có tài khoản? đăng ký ngay</a>
             <p class="text-center mt-2">
@@ -65,10 +66,26 @@
                 }
                 localStorage.setItem('role', userRole); // Store the extracted role name
 
+                // Show Staff Dashboard button for ADMIN and STAFF
+                const staffDashboardBtn = document.getElementById('staffDashboardBtn');
+                if (staffDashboardBtn) { // Check if the button exists
+                    if (userRole === 'ADMIN' || userRole === 'STAFF') {
+                        staffDashboardBtn.style.display = 'block'; // Show the button
+                        // Add event listener for the new button
+                        staffDashboardBtn.onclick = function() {
+                            window.location.href = '/staff/staff-dashboard.html';
+                        };
+                    } else {
+                        staffDashboardBtn.style.display = 'none'; // Hide the button
+                    }
+                }
+
                 // Redirect based on the extracted user role
-                if (userRole === 'ADMIN' || userRole === 'MANAGER') { // Check against the stored role
+                if (userRole === 'ADMIN' || userRole === 'MANAGER') {
                     window.location.href = '/admin/manager-dashboard.html';
-                } else {
+                } else if (userRole === 'STAFF') { // Specific redirection for STAFF
+                    window.location.href = '/staff/staff-dashboard.html';
+                } else { // Default redirection for CUSTOMER or others
                     window.location.href = '/index.html';
                 }
             })

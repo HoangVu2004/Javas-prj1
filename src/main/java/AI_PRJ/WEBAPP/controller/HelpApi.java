@@ -1,6 +1,7 @@
 package AI_PRJ.WEBAPP.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -61,9 +63,77 @@ public class HelpApi {
      */
     @GetMapping("/count")
     @PreAuthorize("hasRole('STAFF') or hasRole('MANAGER') or hasRole('ADMIN')")
-    public ResponseEntity<Integer> getSupportCount(@RequestParam String user, @RequestParam String lab) {
+    public ResponseEntity<Integer> getSupportCount(@RequestParam(required = false) String user, @RequestParam(required = false) String lab) {
+        if (user == null || lab == null) {
+            // Return total support count if parameters are missing
+            return ResponseEntity.ok(helpService.getTotalSupportCount());
+        }
         int count = helpService.getSupportCount(user, lab);
         return ResponseEntity.ok(count);
+    }
+
+    /**
+     * Tạo nội dung hỗ trợ mới
+     * Truy cập: Tất cả người dùng
+     */
+    @PostMapping("/content")
+    public ResponseEntity<?> createSupportContent(@RequestParam String user, @RequestParam String lab, @RequestParam String content) {
+        try {
+            Help help = helpService.createSupportContent(user, lab, content);
+            return ResponseEntity.ok(help);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi tạo nội dung hỗ trợ");
+        }
+    }
+
+    /**
+     * Cập nhật nội dung hỗ trợ
+     * Truy cập: Tất cả người dùng
+     */
+    @PutMapping("/content")
+    public ResponseEntity<?> updateSupportContent(@RequestParam String user, @RequestParam String lab, @RequestParam String content) {
+        try {
+            Help help = helpService.updateSupportContent(user, lab, content);
+            if (help != null) {
+                return ResponseEntity.ok(help);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy nội dung hỗ trợ");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi cập nhật nội dung hỗ trợ");
+        }
+    }
+
+    /**
+     * Xóa nội dung hỗ trợ
+     * Truy cập: Tất cả người dùng
+     */
+    @DeleteMapping("/content")
+    public ResponseEntity<String> deleteSupportContent(@RequestParam String user, @RequestParam String lab) {
+        try {
+            helpService.deleteSupportContent(user, lab);
+            return ResponseEntity.ok("Đã xóa nội dung hỗ trợ");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa nội dung hỗ trợ");
+        }
+    }
+
+    /**
+     * Xem nội dung hỗ trợ cụ thể
+     * Truy cập: Tất cả người dùng
+     */
+    @GetMapping("/content")
+    public ResponseEntity<?> getSupportContent(@RequestParam String user, @RequestParam String lab) {
+        try {
+            Help help = helpService.getSupportContent(user, lab);
+            if (help != null) {
+                return ResponseEntity.ok(help);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy nội dung hỗ trợ");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy nội dung hỗ trợ");
+        }
     }
 
     /**
@@ -88,4 +158,35 @@ public class HelpApi {
         helpService.deleteAllHelps();
         return ResponseEntity.ok("Help data reset");
     }
+
+    /**
+     * Hỗ trợ người dùng chưa test API - cung cấp hướng dẫn chi tiết
+     * Truy cập: Tất cả người dùng
+     */
+    @GetMapping("/api-testing-guide")
+    public ResponseEntity<?> getApiTestingGuide(@RequestParam(required = false) String userId) {
+        try {
+            Map<String, Object> guide = helpService.getApiTestingGuide(userId);
+            return ResponseEntity.ok(guide);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi lấy hướng dẫn test API: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Đánh dấu người dùng đã hoàn thành test API
+     * Truy cập: Tất cả người dùng
+     */
+    @PostMapping("/api-testing-complete")
+    public ResponseEntity<String> markApiTestingComplete(@RequestParam String userId) {
+        try {
+            helpService.markApiTestingComplete(userId);
+            return ResponseEntity.ok("Đã đánh dấu hoàn thành test API");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi đánh dấu hoàn thành test API: " + e.getMessage());
+        }
+    }
+
 }

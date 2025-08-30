@@ -1,121 +1,169 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Staff Dashboard</title>
-    <!-- Link to CSS files if available -->
-    <link rel="stylesheet" href="css/kit.css">
-    <link rel="stylesheet" href="css/lab.css">
-    <link rel="stylesheet" href="css/style.css">
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .container { max-width: 1200px; margin: auto; }
-        h1, h2 { color: #333; }
-        .section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9; }
-        .support-form label, .support-form input, .support-form button, .support-form select { margin-bottom: 10px; }
-        .support-form select, .support-form input[type="number"], .support-form button { padding: 8px; border-radius: 4px; border: 1px solid #ccc; }
-        .support-form button { background-color: #007bff; color: white; cursor: pointer; }
-        .support-form button:hover { background-color: #0056b3; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        .support-count { font-weight: bold; color: #d9534f; }
-        .limit-reached { color: #d9534f; font-weight: bold; }
-        .limit-ok { color: #5cb85c; }
-    </style>
+    <title>Bảng Điều Khiển Hỗ Trợ</title>
+    <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Staff Dashboard</h1>
-
-        <!-- Section for Technical Support for Labs -->
-        <div class="section">
-            <h2>Hỗ trợ kỹ thuật bài Lab</h2>
-            <p>Cung cấp hỗ trợ cho khách hàng trong quá trình thực hiện các bài Lab.</p>
-            <div class="support-form">
-                <div>
-                    <label for="customer-select">Chọn Khách hàng:</label>
-                    <select id="customer-select">
-                        <option value="">-- Chọn Khách hàng --</option>
-                        <!-- Customer options will be loaded via API -->
-                    </select>
-                </div>
-                <div>
-                    <label for="lab-select">Chọn Bài Lab:</label>
-                    <select id="lab-select">
-                        <option value="">-- Chọn Bài Lab --</option>
-                        <!-- Lab options will be loaded via API -->
-                    </select>
-                </div>
-                <div>
-                    <label for="support-count-display">Số lần hỗ trợ đã cung cấp:</label>
-                    <span id="support-count-display" class="support-count">0</span>
-                </div>
-                <button id="record-support-btn">Ghi nhận hỗ trợ</button>
+    <div class="dashboard-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Hệ Thống Hỗ Trợ</h3>
             </div>
-        </div>
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="staff-dashboard.html" class="active">Bảng Điều Khiển</a></li>
+                    <li><a href="help.html">Quản Lý Ticket</a></li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutButton" class="btn btn-logout">Đăng Xuất</a>
+            </div>
+        </aside>
+        <main class="main-content">
+            <header class="main-header">
+                <h1>Bảng Điều Khiển Hỗ Trợ Kỹ Thuật</h1>
+                <div class="user-info">
+                    <span>Chào mừng, <strong id="username">Nhân Viên Hỗ Trợ</strong>!</span>
+                </div>
+            </header>
+            
+            <section class="stats-cards">
+                <div class="card">
+                    <h4>Tổng Số Ticket</h4>
+                    <p id="total-tickets">0</p>
+                </div>
+                <div class="card">
+                    <h4>Ticket Đang Mở</h4>
+                    <p id="open-tickets">0</p>
+                </div>
+                <div class="card">
+                    <h4>Ticket Đang Xử Lý</h4>
+                    <p id="inprogress-tickets">0</p>
+                </div>
+                <div class="card">
+                    <h4>Ticket Đã Đóng</h4>
+                    <p id="closed-tickets">0</p>
+                </div>
+            </section>
 
-        <!-- Section for Managing Support History -->
-        <div class="section">
-            <h2>Quản lý lịch sử hỗ trợ</h2>
-            <p>Theo dõi số lần hỗ trợ đã thực hiện cho mỗi bài Lab, đảm bảo tuân thủ quy định về số lần hỗ trợ tối đa.</p>
-            <table>
-                <thead>
-                    <tr>
-                        <th>Khách hàng</th>
-                        <th>Bài Lab</th>
-                        <th>Số lần hỗ trợ</th>
-                        <th>Giới hạn hỗ trợ</th>
-                        <th>Trạng thái</th>
-                    </tr>
-                </thead>
-                <tbody id="support-history-table-body">
-                    <!-- Support history will be loaded via API -->
-                    <tr>
-                        <td colspan="5" style="text-align: center;">Đang tải lịch sử hỗ trợ...</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
+            <section class="recent-activity">
+                <h2>Ticket Mới Nhất</h2>
+                <div id="recent-tickets" class="card">
+                    <p>Đang tải ticket gần đây...</p>
+                </div>
+            </section>
+        </main>
     </div>
 
-    <!-- Placeholder for JavaScript to handle API calls and dynamic updates -->
     <script>
-        // JavaScript to fetch customer list, lab list, and support history
-        // and to handle recording support.
-        // Example:
-        /*
-        document.addEventListener('DOMContentLoaded', () => {
-            fetchCustomers();
-            fetchLabs();
-            fetchSupportHistory();
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/login.html';
+                return;
+            }
 
-            document.getElementById('record-support-btn').addEventListener('click', recordSupport);
+            // Decode JWT to get user info
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                document.getElementById('username').textContent = payload.sub;
+            } catch (e) {
+                console.error('Failed to decode token:', e);
+            }
+
+            document.getElementById('logoutButton').addEventListener('click', function(e) {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                window.location.href = '/auth/login.html';
+            });
+
+            // Load dashboard statistics
+            loadDashboardStats();
         });
 
-        function fetchCustomers() {
-            // API call to get customers
-            // Populate #customer-select
+        function loadDashboardStats() {
+            fetch('/api/support/all', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                }
+            })
+            .then(response => {
+                if (response.status === 401 || response.status === 403) {
+                    window.location.href = '/auth/login.html';
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error('Không thể tải thống kê');
+                }
+                return response.json();
+            })
+            .then(tickets => {
+                // Update statistics
+                document.getElementById('total-tickets').textContent = tickets.length;
+                
+                const openTickets = tickets.filter(t => t.status === 'OPEN').length;
+                const inProgressTickets = tickets.filter(t => t.status === 'IN_PROGRESS').length;
+                const closedTickets = tickets.filter(t => t.status === 'CLOSED').length;
+                
+                document.getElementById('open-tickets').textContent = openTickets;
+                document.getElementById('inprogress-tickets').textContent = inProgressTickets;
+                document.getElementById('closed-tickets').textContent = closedTickets;
+
+                // Show recent tickets
+                const recentTickets = tickets.slice(0, 5); // Show last 5 tickets
+                const recentTicketsDiv = document.getElementById('recent-tickets');
+                
+                if (recentTickets.length === 0) {
+                    recentTicketsDiv.innerHTML = '<p>Chưa có ticket nào</p>';
+                    return;
+                }
+
+                let html = '';
+                recentTickets.forEach(ticket => {
+                    html += `
+                        <div style="border-bottom: 1px solid #eee; padding: 10px; margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong>${ticket.user}</strong>
+                                <span class="status-${ticket.status?.toLowerCase() || 'open'}">
+                                    ${getStatusText(ticket.status)}
+                                </span>
+                            </div>
+                            <div>Lab: ${ticket.lab}</div>
+                            <div style="margin-top: 5px; color: #666;">
+                                ${ticket.content ? ticket.content.substring(0, 100) + '...' : 'Không có nội dung'}
+                            </div>
+                            <div style="font-size: 12px; color: #999; margin-top: 5px;">
+                                ${new Date(ticket.createdAt).toLocaleString('vi-VN')}
+                            </div>
+                        </div>
+                    `;
+                });
+                recentTicketsDiv.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('recent-tickets').innerHTML = `<p>Lỗi khi tải dữ liệu: ${error.message}</p>`;
+            });
         }
 
-        function fetchLabs() {
-            // API call to get labs
-            // Populate #lab-select
+        function getStatusText(status) {
+            switch(status) {
+                case 'OPEN': return 'Đang mở';
+                case 'IN_PROGRESS': return 'Đang xử lý';
+                case 'CLOSED': return 'Đã đóng';
+                default: return 'Chưa xác định';
+            }
         }
-
-        function fetchSupportHistory() {
-            // API call to get support history
-            // Populate #support-history-table-body
-            // Update support count display
-        }
-
-        function recordSupport() {
-            // Get selected customer and lab
-            // API call to record support
-            // Refresh history and counts
-        }
-        */
     </script>
+
+    <style>
+        .status-open { color: #d9534f; font-weight: bold; }
+        .status-in_progress { color: #f0ad4e; font-weight: bold; }
+        .status-closed { color: #5cb85c; font-weight: bold; }
+        .status-undefined { color: #6c757d; font-weight: bold; }
+    </style>
 </body>
 </html>

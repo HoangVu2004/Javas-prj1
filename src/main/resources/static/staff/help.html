@@ -1,45 +1,265 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Help/Support</title>
+    <title>Quản Lý Hỗ Trợ Kỹ Thuật</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .help-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="text"], textarea, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button.btn-danger {
+            background-color: #dc3545;
+        }
+        button.btn-danger:hover {
+            background-color: #c82333;
+        }
+        button.btn-success {
+            background-color: #28a745;
+        }
+        button.btn-success:hover {
+            background-color: #218838;
+        }
+        .ticket-item {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .ticket-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .ticket-user {
+            font-weight: bold;
+            color: #333;
+        }
+        .ticket-info {
+            color: #666;
+            font-size: 14px;
+        }
+        .ticket-content {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+        }
+        .ticket-meta {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
+        }
+        .ticket-actions {
+            margin-top: 10px;
+            display: flex;
+            gap: 10px;
+        }
+        .error {
+            color: red;
+            margin-top: 10px;
+        }
+        .success {
+            color: green;
+            margin-top: 10px;
+        }
+        .status-open { color: #d9534f; font-weight: bold; }
+        .status-in-progress { color: #f0ad4e; font-weight: bold; }
+        .status-closed { color: #5cb85c; font-weight: bold; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+            max-width: 600px;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close:hover {
+            color: black;
+        }
+        .response-form {
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
-    <h1>Request Help</h1>
-    <form id="helpForm">
-        <div>
-            <label for="user">User:</label>
-            <input type="text" id="user" name="user" required>
-        </div>
-        <div>
-            <label for="lab">Lab:</label>
-            <input type="text" id="lab" name="lab" required>
-        </div>
-        <button type="submit">Request Support</button>
-    </form>
+    <div class="help-container">
+        <h1>Hệ Thống Quản Lý Ticket Hỗ Trợ</h1>
 
-    <hr>
+        <!-- Section 1: Danh sách ticket hỗ trợ -->
+        <div class="section">
+            <h2>Danh Sách Ticket Hỗ Trợ</h2>
+            <div class="form-group">
+                <label for="statusFilter">Lọc theo trạng thái:</label>
+                <select id="statusFilter">
+                    <option value="all">Tất cả</option>
+                    <option value="OPEN">Đang mở</option>
+                    <option value="IN_PROGRESS">Đang xử lý</option>
+                    <option value="CLOSED">Đã đóng</option>
+                </select>
+            </div>
+            <button id="refreshTicketsBtn">Làm Mới Danh Sách</button>
+            <div id="tickets-list"></div>
+        </div>
 
-    <h1>All Help Requests</h1>
-    <div id="help-requests"></div>
+        <!-- Modal for ticket response -->
+        <div id="responseModal" class="modal">
+            <div class="modal-content">
+                <span class="close">&times;</span>
+                <h3>Phản Hồi Ticket</h3>
+                <div id="ticketDetails"></div>
+                <div class="response-form">
+                    <textarea id="responseContent" placeholder="Nhập nội dung phản hồi..." required></textarea>
+                    <button onclick="submitResponse()">Gửi Phản Hồi</button>
+                    <button class="btn-success" onclick="closeTicket()">Đóng Ticket</button>
+                </div>
+                <div id="responseMessage"></div>
+            </div>
+        </div>
+
+        <!-- Section 2: Thống kê hỗ trợ -->
+        <div class="section">
+            <h2>Thống Kê Hỗ Trợ</h2>
+            <div class="form-group">
+                <label for="statUser">Tên Người Dùng (tùy chọn):</label>
+                <input type="text" id="statUser" name="statUser">
+            </div>
+            <button id="getStatsBtn">Lấy Thống Kê</button>
+            <div id="statsResult" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- Section 3: Phản hồi hỗ trợ -->
+        <div class="section">
+            <h2>Phản Hồi Hỗ Trợ</h2>
+            <form id="responseForm">
+                <div class="form-group">
+                    <label for="responseUser">Tên Người Dùng:</label>
+                    <input type="text" id="responseUser" name="responseUser" required>
+                </div>
+                <div class="form-group">
+                    <label for="responseLab">Tên Phòng Lab:</label>
+                    <input type="text" id="responseLab" name="responseLab" required>
+                </div>
+                <div class="form-group">
+                    <label for="responseContent">Nội Dung Phản Hồi:</label>
+                    <textarea id="responseContent" name="responseContent" placeholder="Nhập nội dung phản hồi..." required></textarea>
+                </div>
+                <button type="submit">Gửi Phản Hồi</button>
+            </form>
+            <div id="responseMessage"></div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const token = localStorage.getItem('token');
             if (!token) {
-                window.location.href = '/login.html';
+                window.location.href = '/auth/login.html';
                 return;
             }
 
+            // Ghi nhận hỗ trợ
             const helpForm = document.getElementById('helpForm');
             helpForm.addEventListener('submit', function(event) {
                 event.preventDefault();
+                recordSupport();
+            });
 
+            // Quản lý nội dung
+            const contentForm = document.getElementById('contentForm');
+            contentForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const action = event.submitter.value;
+                if (action === 'create') {
+                    createSupportContent();
+                } else if (action === 'update') {
+                    updateSupportContent();
+                }
+            });
+
+            document.getElementById('deleteBtn').addEventListener('click', deleteSupportContent);
+            document.getElementById('viewBtn').addEventListener('click', viewSupportContent);
+            document.getElementById('refreshBtn').addEventListener('click', loadHelpRequests);
+            document.getElementById('getStatsBtn').addEventListener('click', getSupportStats);
+
+            // Load danh sách hỗ trợ ban đầu
+            loadHelpRequests();
+
+            // Xử lý form phản hồi
+            const responseForm = document.getElementById('responseForm');
+            responseForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                submitResponse();
+            });
+
+            function recordSupport() {
                 const user = document.getElementById('user').value;
                 const lab = document.getElementById('lab').value;
+                const messageDiv = document.getElementById('recordMessage');
 
-                fetch(`/help/record?user=${user}&lab=${lab}`, {
+                fetch(`/api/support/record?user=${user}&lab=${lab}`, {
                     method: 'POST',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -47,58 +267,257 @@
                 })
                 .then(response => {
                     if (response.ok) {
-                        alert('Support recorded successfully!');
-                        loadHelpRequests(); // Refresh the list
+                        messageDiv.innerHTML = '<p class="success">Đã ghi nhận hỗ trợ thành công!</p>';
+                        loadHelpRequests();
                     } else {
                         response.text().then(text => {
-                            alert(`Error: ${text}`);
+                            messageDiv.innerHTML = `<p class="error">Lỗi: ${text}</p>`;
                         });
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('An unexpected error occurred.');
+                    messageDiv.innerHTML = '<p class="error">Lỗi không xác định xảy ra.</p>';
                 });
-            });
+            }
 
-            function loadHelpRequests() {
-                fetch('/help/all', {
-                     headers: {
+            function createSupportContent() {
+                const user = document.getElementById('contentUser').value;
+                const lab = document.getElementById('contentLab').value;
+                const content = document.getElementById('content').value;
+                const messageDiv = document.getElementById('contentMessage');
+
+                fetch(`/api/support/content?user=${user}&lab=${lab}&content=${encodeURIComponent(content)}`, {
+                    method: 'POST',
+                    headers: {
                         'Authorization': `Bearer ${token}`
                     }
                 })
                 .then(response => {
-                     if (response.status === 401 || response.status === 403) {
-                        window.location.href = '/login.html';
+                    if (response.ok) {
+                        messageDiv.innerHTML = '<p class="success">Đã tạo nội dung hỗ trợ thành công!</p>';
+                        document.getElementById('content').value = '';
+                    } else {
+                        response.text().then(text => {
+                            messageDiv.innerHTML = `<p class="error">Lỗi: ${text}</p>`;
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    messageDiv.innerHTML = '<p class="error">Lỗi không xác định xảy ra.</p>';
+                });
+            }
+
+            function updateSupportContent() {
+                const user = document.getElementById('contentUser').value;
+                const lab = document.getElementById('contentLab').value;
+                const content = document.getElementById('content').value;
+                const messageDiv = document.getElementById('contentMessage');
+
+                fetch(`/api/support/content?user=${user}&lab=${lab}&content=${encodeURIComponent(content)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        messageDiv.innerHTML = '<p class="success">Đã cập nhật nội dung hỗ trợ thành công!</p>';
+                    } else {
+                        response.text().then(text => {
+                            messageDiv.innerHTML = `<p class="error">Lỗi: ${text}</p>`;
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    messageDiv.innerHTML = '<p class="error">Lỗi không xác định xảy ra.</p>';
+                });
+            }
+
+            function deleteSupportContent() {
+                const user = document.getElementById('contentUser').value;
+                const lab = document.getElementById('contentLab').value;
+                const messageDiv = document.getElementById('contentMessage');
+
+                if (!confirm('Bạn có chắc chắn muốn xóa nội dung hỗ trợ này?')) {
+                    return;
+                }
+
+                fetch(`/api/support/content?user=${user}&lab=${lab}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        messageDiv.innerHTML = '<p class="success">Đã xóa nội dung hỗ trợ thành công!</p>';
+                        document.getElementById('content').value = '';
+                        document.getElementById('contentDisplay').style.display = 'none';
+                    } else {
+                        response.text().then(text => {
+                            messageDiv.innerHTML = `<p class="error">Lỗi: ${text}</p>`;
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    messageDiv.innerHTML = '<p class="error">Lỗi không xác định xảy ra.</p>';
+                });
+            }
+
+            function viewSupportContent() {
+                const user = document.getElementById('contentUser').value;
+                const lab = document.getElementById('contentLab').value;
+                const messageDiv = document.getElementById('contentMessage');
+
+                fetch(`/api/support/content?user=${user}&lab=${lab}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        return response.json();
+                    } else {
+                        throw new Error('Không tìm thấy nội dung hỗ trợ');
+                    }
+                })
+                .then(help => {
+                    document.getElementById('content').value = help.content || '';
+                    document.getElementById('currentContent').innerHTML = `
+                        <p><strong>Nội dung:</strong> ${help.content || 'Chưa có nội dung'}</p>
+                        <p><strong>Số lần hỗ trợ:</strong> ${help.supportCount || 0}</p>
+                        <p><strong>Tạo lúc:</strong> ${help.createdAt || 'N/A'}</p>
+                        <p><strong>Cập nhật lúc:</strong> ${help.updatedAt || 'N/A'}</p>
+                    `;
+                    document.getElementById('contentDisplay').style.display = 'block';
+                    messageDiv.innerHTML = '';
+                })
+                .catch(error => {
+                    messageDiv.innerHTML = `<p class="error">${error.message}</p>`;
+                    document.getElementById('contentDisplay').style.display = 'none';
+                });
+            }
+
+            function loadHelpRequests() {
+                fetch('/api/support/all', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.status === 401 || response.status === 403) {
+                        window.location.href = '/auth/login.html';
+                        return;
                     }
                     if (!response.ok) {
-                        throw new Error('Failed to fetch help requests.');
+                        throw new Error('Không thể tải danh sách hỗ trợ.');
                     }
                     return response.json();
                 })
                 .then(requests => {
                     const helpRequests = document.getElementById('help-requests');
                     if (requests.length === 0) {
-                        helpRequests.innerHTML = '<p>No help requests found.</p>';
+                        helpRequests.innerHTML = '<p>Không có yêu cầu hỗ trợ nào.</p>';
                         return;
                     }
 
-                    const ul = document.createElement('ul');
+                    let html = '';
                     requests.forEach(request => {
-                        const li = document.createElement('li');
-                        li.textContent = `User: ${request.user}, Lab: ${request.lab}`;
-                        ul.appendChild(li);
+                        html += `
+                            <div class="help-item">
+                                <div class="help-header">
+                                    <span class="help-user">${request.user}</span>
+                                    <span class="help-lab">Lab: ${request.lab}</span>
+                                </div>
+                                <div class="help-content">
+                                    <p><strong>Nội dung:</strong> ${request.content || 'Chưa có nội dung'}</p>
+                                    <p><strong>Số lần hỗ trợ:</strong> ${request.supportCount}</p>
+                                </div>
+                                <div class="help-meta">
+                                    Tạo: ${request.createdAt} | Cập nhật: ${request.updatedAt}
+                                </div>
+                            </div>
+                        `;
                     });
-                    helpRequests.innerHTML = '';
-                    helpRequests.appendChild(ul);
+                    helpRequests.innerHTML = html;
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    document.getElementById('help-requests').innerHTML = `<p>${error.message}</p>`;
+                    document.getElementById('help-requests').innerHTML = `<p class="error">${error.message}</p>`;
                 });
             }
 
-            loadHelpRequests();
+            function getSupportStats() {
+                const user = document.getElementById('statUser').value;
+                const lab = document.getElementById('statLab').value;
+                const statsResult = document.getElementById('statsResult');
+
+                let url = '/api/support/count';
+                if (user || lab) {
+                    url += `?${user ? 'user=' + user : ''}${user && lab ? '&' : ''}${lab ? 'lab=' + lab : ''}`;
+                }
+
+                fetch(url, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Không thể lấy thống kê.');
+                    }
+                    return response.json();
+                })
+                .then(count => {
+                    let message = '';
+                    if (user && lab) {
+                        message = `Người dùng "${user}" tại lab "${lab}" đã được hỗ trợ ${count} lần.`;
+                    } else if (user) {
+                        message = `Người dùng "${user}" đã được hỗ trợ tổng cộng ${count} lần.`;
+                    } else if (lab) {
+                        message = `Lab "${lab}" đã được hỗ trợ tổng cộng ${count} lần.`;
+                    } else {
+                        message = `Tổng số lần hỗ trợ: ${count}`;
+                    }
+                    statsResult.innerHTML = `<p class="success">${message}</p>`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    statsResult.innerHTML = `<p class="error">${error.message}</p>`;
+                });
+            }
+
+            function submitResponse() {
+                const user = document.getElementById('responseUser').value;
+                const lab = document.getElementById('responseLab').value;
+                const responseContent = document.getElementById('responseContent').value;
+                const messageDiv = document.getElementById('responseMessage');
+
+                fetch(`/api/support/content?user=${user}&lab=${lab}&content=${encodeURIComponent(responseContent)}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        messageDiv.innerHTML = '<p class="success">Đã gửi phản hồi thành công!</p>';
+                        document.getElementById('responseContent').value = '';
+                    } else {
+                        response.text().then(text => {
+                            messageDiv.innerHTML = `<p class="error">Lỗi: ${text}</p>`;
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    messageDiv.innerHTML = '<p class="error">Lỗi không xác định xảy ra.</p>';
+                });
+            }
         });
     </script>
 </body>

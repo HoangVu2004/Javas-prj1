@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gửi Yêu Cầu Hỗ Trợ</title>
+    <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Gửi Yêu Cầu Hỗ Trợ</h1>
+        <form id="ticketForm">
+            <div class="form-group">
+                <label for="kitName">Tên Kit:</label>
+                <input type="text" id="kitName" name="kitName" required>
+            </div>
+            <div class="form-group">
+                <label for="labName">Tên Lab:</label>
+                <input type="text" id="labName" name="labName" required>
+            </div>
+            <div class="form-group">
+                <label for="ticketContent">Nội Dung:</label>
+                <textarea id="ticketContent" name="ticketContent" required></textarea>
+            </div>
+            <button type="submit">Gửi Yêu Cầu</button>
+        </form>
+        <div id="responseMessage"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth/login.html';
+                return;
+            }
+
+            const ticketForm = document.getElementById('ticketForm');
+            ticketForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                submitTicket();
+            });
+
+            function submitTicket() {
+                const kitName = document.getElementById('kitName').value;
+                const labName = document.getElementById('labName').value;
+                const ticketContent = document.getElementById('ticketContent').value;
+                const responseMessage = document.getElementById('responseMessage');
+
+                fetch(`/api/support/content?user=${localStorage.getItem('username')}&lab=${labName}&content=${encodeURIComponent(ticketContent)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        responseMessage.innerHTML = '<p class="success">Yêu cầu hỗ trợ đã được gửi thành công!</p>';
+                        ticketForm.reset();
+                    } else {
+                        response.text().then(text => {
+                            responseMessage.innerHTML = `<p class="error">Lỗi: ${text}</p>`;
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    responseMessage.innerHTML = '<p class="error">Lỗi không xác định xảy ra.</p>';
+                });
+            }
+        });
+    </script>
+</body>
+</html>
