@@ -4,10 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Shopping Cart</title>
-    <link rel="stylesheet" href="/css/style.css"> <!-- Assuming a general style.css exists -->
+    <link rel="stylesheet" href="/css/style.css">
     <style>
-        /* Basic styling for cart items */
-        .cart-item {
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px;
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            overflow: auto;
+            padding: 0 2rem;
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .product-list, .cart-section {
+            background: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .product-item, .cart-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -15,32 +39,44 @@
             border-bottom: 1px solid #eee;
             padding-bottom: 10px;
         }
-        .cart-item-details {
+        .product-item:last-child, .cart-item:last-child {
+            border-bottom: none;
+        }
+        .product-details, .cart-item-details {
             flex-grow: 1;
-            margin-right: 20px;
+        }
+        .product-item button, .cart-item-actions button {
+            background: #337ab7;
+            color: #fff;
+            border: 0;
+            padding: 8px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        .product-item button:hover, .cart-item-actions button:hover {
+            background: #286090;
         }
         .cart-item-actions input[type="number"] {
             width: 60px;
+            padding: 5px;
             margin-right: 10px;
-        }
-        .cart-item-actions button {
-            margin-left: 5px;
         }
         #cart-total {
             font-weight: bold;
             margin-top: 20px;
             text-align: right;
+            font-size: 1.2em;
         }
         #checkout-button {
             display: block;
             width: 100%;
-            padding: 10px;
+            padding: 12px;
             background-color: #28a745;
             color: white;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-            font-size: 1.1em;
+            font-size: 1.2em;
             margin-top: 20px;
         }
         #checkout-button:hover {
@@ -49,37 +85,74 @@
     </style>
 </head>
 <body>
-    <h1>Your Shopping Cart</h1>
+    <div class="container">
+        <h1>Our Products</h1>
+        <div id="product-list" class="product-list">
+            <!-- Products will be loaded here -->
+        </div>
 
-    <div id="cart-items-container">
-        <!-- Cart items will be loaded here by JavaScript -->
-        <p>Your cart is empty.</p>
+        <h2>Your Shopping Cart</h2>
+        <div class="cart-section">
+            <div id="cart-items-container">
+                <p>Your cart is empty.</p>
+            </div>
+            <div id="cart-total"></div>
+            <button id="checkout-button" style="display: none;">Proceed to Checkout</button>
+        </div>
     </div>
 
-    <div id="cart-total">
-        <!-- Total will be displayed here -->
-    </div>
-
-    <button id="checkout-button">Proceed to Checkout</button>
-
-    <!-- Simple form for adding items -->
-    <div>
-        <h3>Add Item to Cart</h3>
-        <input type="number" id="add-kit-id" placeholder="Kit ID">
-        <input type="number" id="add-quantity" placeholder="Quantity" value="1">
-        <button id="add-to-cart-btn">Add to Cart</button>
-    </div>
- 
-     <script>
-         document.addEventListener('DOMContentLoaded', () => {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const productListContainer = document.getElementById('product-list');
             const cartItemsContainer = document.getElementById('cart-items-container');
             const cartTotalDiv = document.getElementById('cart-total');
             const checkoutButton = document.getElementById('checkout-button');
 
-            // Function to fetch cart data from the API
+            async function fetchProducts() {
+                try {
+                    const response = await fetch('/api/kits');
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const products = await response.json();
+                    displayProducts(products);
+                } catch (error) {
+                    console.error('Error fetching products:', error);
+                    productListContainer.innerHTML = '<p>Could not load products.</p>';
+                }
+            }
+
+            function displayProducts(products) {
+                productListContainer.innerHTML = '';
+                products.forEach(product => {
+                    const productElement = document.createElement('div');
+                    productElement.classList.add('product-item');
+                    productElement.innerHTML = `
+                        <div class="product-details">
+                            <strong>${product.name}</strong> - $${product.price.toFixed(2)}
+                        </div>
+                        <button class="add-to-cart-btn" data-product-id="${product.id}">Add to Cart</button>
+                    `;
+                    productListContainer.appendChild(productElement);
+                });
+            }
+
+            // --- CART FUNCTIONS ---
+
             async function fetchCart() {
                 try {
-                    const response = await fetch('/api/cart');
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        cartItemsContainer.innerHTML = '<p>Please <a href="/auth/login.html">log in</a> to view your cart.</p>';
+                        return;
+                    }
+                    const response = await fetch('/api/cart', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.status === 401) {
+                         cartItemsContainer.innerHTML = '<p>Your session has expired. Please <a href="/auth/login.html">log in</a> again.</p>';
+                         return;
+                    }
                     if (!response.ok) {
                         throw new Error(`HTTP error! status: ${response.status}`);
                     }
@@ -91,34 +164,28 @@
                 }
             }
 
-            // Function to display cart items
             function displayCart(cart) {
-                cartItemsContainer.innerHTML = ''; // Clear previous content
-
+                cartItemsContainer.innerHTML = '';
                 if (!cart || !cart.items || cart.items.length === 0) {
                     cartItemsContainer.innerHTML = '<p>Your cart is empty.</p>';
-                    cartTotalDiv.innerHTML = ''; // Clear total if cart is empty
-                    checkoutButton.style.display = 'none'; // Hide checkout if cart is empty
+                    cartTotalDiv.innerHTML = '';
+                    checkoutButton.style.display = 'none';
                     return;
                 }
 
-                checkoutButton.style.display = 'block'; // Show checkout button if cart has items
-
+                checkoutButton.style.display = 'block';
                 cart.items.forEach(item => {
                     const cartItemElement = document.createElement('div');
                     cartItemElement.classList.add('cart-item');
-                    cartItemElement.dataset.kitId = item.kitId; // Store kitId for actions
+                    cartItemElement.dataset.kitId = item.kit.id;
 
-                    // Placeholder for item details (name, price) - would need to fetch from product API
                     cartItemElement.innerHTML = `
                         <div class="cart-item-details">
-                            <strong>Kit ID: ${item.kitId}</strong>
-                            <p>Quantity:
-                                <input type="number" value="${item.quantity}" min="1" class="item-quantity">
-                            </p>
-                            <!-- Placeholder for price: <p>Price: $${item.price.toFixed(2)}</p> -->
+                            <strong>${item.kit.name}</strong>
+                            <p>Price: $${item.kit.price.toFixed(2)}</p>
                         </div>
                         <div class="cart-item-actions">
+                            Quantity: <input type="number" value="${item.quantity}" min="1" class="item-quantity">
                             <button class="update-quantity-btn">Update</button>
                             <button class="remove-item-btn">Remove</button>
                         </div>
@@ -126,13 +193,77 @@
                     cartItemsContainer.appendChild(cartItemElement);
                 });
 
-                // Placeholder for total calculation
-                // In a real app, you'd calculate total based on fetched prices
-                const placeholderTotal = cart.items.reduce((sum, item) => sum + item.quantity, 0); // Sum of quantities as placeholder
-                cartTotalDiv.innerHTML = `Total Items (placeholder): ${placeholderTotal}`;
+                const total = cart.items.reduce((sum, item) => sum + (item.kit.price * item.quantity), 0);
+                cartTotalDiv.innerHTML = `Total: $${total.toFixed(2)}`;
             }
 
-            // Event listener for updating quantity
+            async function addItemToCart(productId, quantity) {
+                try {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        alert('You must be logged in to add items to the cart.');
+                        return;
+                    }
+                    const response = await fetch('/api/cart/add', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ productId: productId, quantity: quantity })
+                    });
+                    if (!response.ok) {
+                        const errorBody = await response.text();
+                        throw new Error(`HTTP error! status: ${response.status}, body: ${errorBody}`);
+                    }
+                    await fetchCart(); // Refresh cart display
+                } catch (error) {
+                    console.error('Error adding item:', error);
+                    alert('Failed to add item. See console for details.');
+                }
+            }
+
+            async function removeItemFromCart(kitId) {
+                // Implementation for removing item
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`/api/cart/remove?kitId=${kitId}`, {
+                        method: 'DELETE',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    fetchCart();
+                } catch (error) {
+                    console.error('Error removing item:', error);
+                    alert('Failed to remove item.');
+                }
+            }
+
+            async function updateItemQuantity(kitId, quantity) {
+                // Implementation for updating quantity
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`/api/cart/update?kitId=${kitId}&quantity=${quantity}`, {
+                        method: 'PUT',
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    fetchCart();
+                } catch (error) {
+                    console.error('Error updating quantity:', error);
+                    alert('Failed to update quantity.');
+                }
+            }
+
+            // --- EVENT LISTENERS ---
+
+            productListContainer.addEventListener('click', (event) => {
+                if (event.target.classList.contains('add-to-cart-btn')) {
+                    const productId = parseInt(event.target.dataset.productId, 10);
+                    addItemToCart(productId, 1); // Add one item by default
+                }
+            });
+
             cartItemsContainer.addEventListener('click', async (event) => {
                 const target = event.target;
                 const cartItemElement = target.closest('.cart-item');
@@ -141,7 +272,7 @@
                 const kitId = cartItemElement.dataset.kitId;
 
                 if (target.classList.contains('remove-item-btn')) {
-                    await removeItem(kitId);
+                    await removeItemFromCart(kitId);
                 } else if (target.classList.contains('update-quantity-btn')) {
                     const quantityInput = cartItemElement.querySelector('.item-quantity');
                     const newQuantity = parseInt(quantityInput.value, 10);
@@ -149,77 +280,12 @@
                 }
             });
 
-            // Function to remove an item
-            async function removeItem(kitId) {
-                try {
-                    const response = await fetch(`/api/cart/remove?kitId=${kitId}`, {
-                        method: 'DELETE'
-                    });
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    fetchCart(); // Refresh cart display
-                } catch (error) {
-                    console.error('Error removing item:', error);
-                    alert('Failed to remove item.');
-                }
-            }
-
-            // Function to update item quantity
-            async function updateItemQuantity(kitId, quantity) {
-                try {
-                    const response = await fetch(`/api/cart/update?kitId=${kitId}&quantity=${quantity}`, {
-                        method: 'PUT'
-                    });
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    fetchCart(); // Refresh cart display
-                } catch (error) {
-                    console.error('Error updating quantity:', error);
-                    alert('Failed to update quantity.');
-                }
-            }
-           
-           // Function to add an item to the cart
-           async function addItem(kitId, quantity) {
-               try {
-                   const response = await fetch('/api/cart/add', {
-                       method: 'POST',
-                       headers: {
-                           'Content-Type': 'application/json',
-                       },
-                       body: JSON.stringify({ productId: kitId, quantity: quantity })
-                   });
-                   if (!response.ok) {
-                       throw new Error(`HTTP error! status: ${response.status}`);
-                   }
-                   fetchCart(); // Refresh cart display
-               } catch (error) {
-                   console.error('Error adding item:', error);
-                   alert('Failed to add item.');
-               }
-           }
-
-            //Event listener for checkout button
             checkoutButton.addEventListener('click', () => {
-                // In a real application, this would navigate to a checkout page or initiate checkout process
-                alert('Proceeding to checkout...');
-                // Example: window.location.href = '/checkout.html';
+                window.location.href = '/public/checkout.html';
             });
 
-           // Event listener for the new add to cart button
-           document.getElementById('add-to-cart-btn').addEventListener('click', () => {
-               const kitId = document.getElementById('add-kit-id').value;
-               const quantity = document.getElementById('add-quantity').value;
-               if (!kitId || !quantity) {
-                   alert('Please enter a Kit ID and quantity.');
-                   return;
-               }
-               addItem(parseInt(kitId, 10), parseInt(quantity, 10));
-           });
-
-            // Initial fetch of cart data when the page loads
+            // --- INITIALIZATION ---
+            fetchProducts();
             fetchCart();
         });
     </script>

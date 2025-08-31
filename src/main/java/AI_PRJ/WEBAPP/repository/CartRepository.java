@@ -1,13 +1,13 @@
-// package AI_PRJ.WEBAPP.repository;
+package AI_PRJ.WEBAPP.repository;
 
-// import AI_PRJ.WEBAPP.model.Cart;
-// import AI_PRJ.WEBAPP.model.User;
-// import org.springframework.data.jpa.repository.JpaRepository;
-// import org.springframework.stereotype.Repository;
+import AI_PRJ.WEBAPP.model.Cart;
+import AI_PRJ.WEBAPP.model.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
-// import java.util.Optional;
+import java.util.Optional;
 
-// @Repository
-// public interface CartRepository extends JpaRepository<Cart, Long> {
-//     Optional<Cart> findByUser(User user);
-// }
+@Repository
+public interface CartRepository extends JpaRepository<Cart, Long> {
+    Optional<Cart> findByUser(User user);
+}

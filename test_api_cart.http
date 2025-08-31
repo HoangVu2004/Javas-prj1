@@ -1,0 +1,37 @@
+how to test the cart api
+
+
+### 1. login
+http://localhost:8084/api/auth/login.html
+POST
+
+json
+{
+    "usernameOrEmail": "admin",
+    "password": "123456"
+}
+
+then copy the token to "authorization" tab and 
+set bearer token
+
+### 2 test the cart api
+    http://localhost:8084/api/cart
+GET
+
+### 3 add cart item
+    http://localhost:8084/api/cart/add
+POST
+{
+  "productId": 1,
+  "quantity": 1
+}
+
+### 3.5
+update item
+    http://localhost:8084/api/cart/update?kitId=1&quantity=3
+PUT
+
+
+### 4 remove item
+    http://localhost:8084/api/cart/remove?kitId=1
+DELETE
