@@ -155,10 +155,10 @@ public class WebSecurityConfig {
                         .requestMatchers("/index.html", "/auth/**", "/index.html", "/public/products.html",
 
 
-                                "/public/product-detail.html", "/**")
+                                "/public/product-detail.html")
 
 
-                        .permitAll()
+                       .permitAll()
 
 
 
@@ -300,27 +300,20 @@ public class WebSecurityConfig {
 
 
                         // Mua sắm
-
-
                         .requestMatchers(HttpMethod.GET, "/api/kits")
 
-
                         .hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER")
-
 
                         .requestMatchers(HttpMethod.GET, "/api/kits/*")
 
-
                         .hasAnyRole("ADMIN", "MANAGER", "STAFF", "CUSTOMER")
-
 
                         .requestMatchers(HttpMethod.POST, "/api/kits").authenticated()
 
-
                         .requestMatchers("/api/orders").hasAnyRole("ADMIN", "MANAGER", "CUSTOMER")
 
-
                         .requestMatchers("/api/cart/**").permitAll()
+                        .requestMatchers("/api/orders/**").permitAll()
 
 
 
