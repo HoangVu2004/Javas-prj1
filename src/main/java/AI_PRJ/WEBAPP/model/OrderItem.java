@@ -29,8 +29,11 @@ public class OrderItem {
     @Column(nullable = false)
     private int quantity;
 
-    @Column(name = "price_at_purchase", nullable = false, precision = 10, scale = 2)
+    @Column(name = "unit_price", nullable = false, precision = 10, scale = 2)
     private java.math.BigDecimal priceAtPurchase;
+
+    @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
+    private java.math.BigDecimal totalPrice;
 
     // Constructors
     public OrderItem() {
@@ -41,6 +44,7 @@ public class OrderItem {
         this.kit = kit;
         this.quantity = quantity;
         this.priceAtPurchase = priceAtPurchase;
+        this.totalPrice = priceAtPurchase.multiply(java.math.BigDecimal.valueOf(quantity));
     }
 
     @Override

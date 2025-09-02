@@ -12,12 +12,15 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import AI_PRJ.WEBAPP.model.Help;
 import AI_PRJ.WEBAPP.service.HelpService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
  * =============================================
@@ -43,8 +46,23 @@ public class HelpApi {
      */
     @PostMapping("/record")
     @PreAuthorize("hasRole('STAFF') or hasRole('MANAGER') or hasRole('ADMIN')")
-    public ResponseEntity<String> recordSupport(@RequestParam String user, @RequestParam String lab) {
+    public ResponseEntity<String> recordSupport(
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String lab,
+            @RequestBody(required = false) Map<String, String> request) {
         try {
+            // Get parameters from request body if not provided as query params
+            if (user == null && request != null) {
+                user = request.get("user");
+            }
+            if (lab == null && request != null) {
+                lab = request.get("lab");
+            }
+
+            if (user == null || lab == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required parameters: user and lab");
+            }
+
             if (!helpService.canSupport(user, lab)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Support limit exceeded");
             }
@@ -77,8 +95,27 @@ public class HelpApi {
      * Truy cập: Tất cả người dùng
      */
     @PostMapping("/content")
-    public ResponseEntity<?> createSupportContent(@RequestParam String user, @RequestParam String lab, @RequestParam String content) {
+    public ResponseEntity<?> createSupportContent(
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String lab,
+            @RequestParam(required = false) String content,
+            @RequestBody(required = false) Map<String, String> request) {
         try {
+            // Get parameters from request body if not provided as query params
+            if (user == null && request != null) {
+                user = request.get("user");
+            }
+            if (lab == null && request != null) {
+                lab = request.get("lab");
+            }
+            if (content == null && request != null) {
+                content = request.get("content");
+            }
+
+            if (user == null || lab == null || content == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required parameters: user, lab, and content");
+            }
+
             Help help = helpService.createSupportContent(user, lab, content);
             return ResponseEntity.ok(help);
         } catch (Exception e) {
@@ -91,8 +128,27 @@ public class HelpApi {
      * Truy cập: Tất cả người dùng
      */
     @PutMapping("/content")
-    public ResponseEntity<?> updateSupportContent(@RequestParam String user, @RequestParam String lab, @RequestParam String content) {
+    public ResponseEntity<?> updateSupportContent(
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String lab,
+            @RequestParam(required = false) String content,
+            @RequestBody(required = false) Map<String, String> request) {
         try {
+            // Get parameters from request body if not provided as query params
+            if (user == null && request != null) {
+                user = request.get("user");
+            }
+            if (lab == null && request != null) {
+                lab = request.get("lab");
+            }
+            if (content == null && request != null) {
+                content = request.get("content");
+            }
+
+            if (user == null || lab == null || content == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required parameters: user, lab, and content");
+            }
+
             Help help = helpService.updateSupportContent(user, lab, content);
             if (help != null) {
                 return ResponseEntity.ok(help);
@@ -161,9 +217,10 @@ public class HelpApi {
 
     /**
      * Hỗ trợ người dùng chưa test API - cung cấp hướng dẫn chi tiết
-     * Truy cập: Tất cả người dùng
+     * Truy cập: Tất cả người dùng đã xác thực
      */
     @GetMapping("/api-testing-guide")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<?> getApiTestingGuide(@RequestParam(required = false) String userId) {
         try {
             Map<String, Object> guide = helpService.getApiTestingGuide(userId);
@@ -176,16 +233,72 @@ public class HelpApi {
 
     /**
      * Đánh dấu người dùng đã hoàn thành test API
-     * Truy cập: Tất cả người dùng
+     * Truy cập: Tất cả người dùng đã xác thực
      */
     @PostMapping("/api-testing-complete")
-    public ResponseEntity<String> markApiTestingComplete(@RequestParam String userId) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<String> markApiTestingComplete() {
         try {
-            helpService.markApiTestingComplete(userId);
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String userid = authentication.getName();
+            helpService.markApiTestingComplete(userid);
             return ResponseEntity.ok("Đã đánh dấu hoàn thành test API");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Lỗi khi đánh dấu hoàn thành test API: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Thêm phản hồi từ staff cho yêu cầu hỗ trợ
+     * Truy cập: Tất cả người dùng đã xác thực
+     */
+    @PostMapping("/reply")
+    @PreAuthorize("hasRole('STAFF') or hasRole('MANAGER') or hasRole('ADMIN')")
+    public ResponseEntity<?> addReply(
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String lab,
+            @RequestParam(required = false) String replycontent,
+            @RequestParam(required = false) String staffid,
+            @RequestBody(required = false) Map<String, String> request) {
+        try {
+            if (request != null && !request.isEmpty()) {
+                user = request.get("user");
+                lab = request.get("lab");
+                // Fix key name to "replycontent" (case sensitive)
+                replycontent = request.get("replycontent");
+                staffid = request.get("staffid");
+            }
+            if (user == null || lab == null || replycontent == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Missing required parameters: user, lab, and replycontent");
+            }
+            Help help = helpService.addReply(user, lab, replycontent, staffid);
+            if (help != null) {
+                return ResponseEntity.ok(help);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy yêu cầu hỗ trợ");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi thêm phản hồi: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Xem phản hồi từ staff cho yêu cầu hỗ trợ
+     * Truy cập: Tất cả người dùng đã xác thực
+     */
+    @GetMapping("/reply")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<?> getReply(@RequestParam String user, @RequestParam String lab) {
+        try {
+            String reply = helpService.getReply(user, lab);
+            if (reply != null) {
+                return ResponseEntity.ok(reply);
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy phản hồi");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy phản hồi: " + e.getMessage());
         }
     }
 

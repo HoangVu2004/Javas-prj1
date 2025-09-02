@@ -1,5 +1,6 @@
 package AI_PRJ.WEBAPP.service;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -187,11 +188,37 @@ public class HelpService {
         // Ghi nhận vào hệ thống rằng user đã hoàn thành test API
         // Có thể lưu vào bảng Help hoặc tạo bảng mới cho tracking API testing
         System.out.println("User " + userId + " đã hoàn thành test API");
-        
+
         // Tạo một bản ghi hỗ trợ đặc biệt để đánh dấu
         Help help = new Help(userId, "API_TESTING", 1);
         help.setContent("User đã hoàn thành test API thành công");
         helpRepo.save(help);
+    }
+
+    /**
+     * Thêm phản hồi từ staff cho yêu cầu hỗ trợ
+     */
+    @Transactional
+    public Help addReply(String user, String lab, String replyContent, String staffId) {
+        Help help = helpRepo.findByUserAndLab(user, lab);
+        if (help != null) {
+            help.setReplyContent(replyContent);
+            help.setReplyCreatedAt(LocalDateTime.now());
+            help.setStaffId(staffId);
+            return helpRepo.save(help);
+        }
+        return null;
+    }
+
+    /**
+     * Lấy phản hồi từ staff cho yêu cầu hỗ trợ
+     */
+    public String getReply(String user, String lab) {
+        Help help = helpRepo.findByUserAndLab(user, lab);
+        if (help != null) {
+            return help.getReplyContent();
+        }
+        return null;
     }
 
 }

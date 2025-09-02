@@ -1,14 +1,21 @@
 package AI_PRJ.WEBAPP.controller;
 
-import AI_PRJ.WEBAPP.model.Order;
-import AI_PRJ.WEBAPP.security.UserDetailsImpl;
-import AI_PRJ.WEBAPP.service.OrderService;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import AI_PRJ.WEBAPP.dto.CheckoutRequest;
+import AI_PRJ.WEBAPP.model.Order;
+import AI_PRJ.WEBAPP.model.User;
+import AI_PRJ.WEBAPP.repository.UserRepository;
+import AI_PRJ.WEBAPP.service.OrderService;
 
 @RestController
 @RequestMapping("/api/orders")
@@ -17,13 +24,23 @@ public class OrderController {
     @Autowired
     private OrderService orderService;
 
+    @Autowired
+    private UserRepository userRepository;
+
+    private User getDemoUser() {
+        // For demo purposes, use a default user (e.g., admin with ID 1)
+        // In a real application, you would handle unauthenticated users differently
+        return userRepository.findById(1L)
+                .orElseThrow(() -> new IllegalStateException(
+                        "Demo user not found in database. Please ensure user with ID 1 exists."));
+    }
+
     @PostMapping("/checkout")
-    public ResponseEntity<?> createOrder(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity.status(401).body("User not authenticated");
-        }
+    public ResponseEntity<?> createOrder(@RequestBody CheckoutRequest checkoutRequest) {
         try {
-            Order order = orderService.createOrderFromCart(userDetails.getId());
+            User user = getDemoUser();
+            Order order = orderService.createOrderFromCart(user.getId(), checkoutRequest.getAddress(),
+                    checkoutRequest.getPhone(), checkoutRequest.getPaymentMethod(), checkoutRequest.getName());
             return ResponseEntity.ok(order);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -31,11 +48,22 @@ public class OrderController {
     }
 
     @GetMapping
-    public ResponseEntity<?> getOrders(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        if (userDetails == null) {
-            return ResponseEntity.status(401).body("User not authenticated");
+    public ResponseEntity<?> getOrders() {
+        try {
+            User user = getDemoUser();
+            List<Order> orders = orderService.getOrdersForUser(user.getId());
+            return ResponseEntity.ok(orders);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-        List<Order> orders = orderService.getOrdersForUser(userDetails.getId());
-        return ResponseEntity.ok(orders);
+    }
+    @DeleteMapping
+    public ResponseEntity<?> deleteOrders() {
+        try {
+            orderService.deleteAllOrders();
+            return ResponseEntity.ok("All orders deleted successfully.");
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 }

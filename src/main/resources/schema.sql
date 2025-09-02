@@ -119,6 +119,7 @@ CREATE TABLE orders (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     order_code VARCHAR(50) NOT NULL UNIQUE,
     customer_id BIGINT NOT NULL,
+    customer_name VARCHAR(100),
     total_amount DECIMAL(10,2) NOT NULL,
     shipping_address TEXT NOT NULL,
     shipping_phone VARCHAR(15),

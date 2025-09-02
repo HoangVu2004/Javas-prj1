@@ -155,8 +155,7 @@ public class WebSecurityConfig {
                         .requestMatchers("/index.html", "/auth/**", "/index.html", "/public/products.html",
 
 
-                                "/public/product-detail.html")
-
+                        "/public/product-detail.html", "/**")
 
                        .permitAll()
 

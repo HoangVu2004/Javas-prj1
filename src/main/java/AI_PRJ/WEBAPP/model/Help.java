@@ -31,6 +31,15 @@ public class Help {
     @Column(name = "content", length = 1000)
     private String content;
 
+    @Column(name = "reply_content", length = 1000)
+    private String replyContent;
+
+    @Column(name = "reply_created_at")
+    private LocalDateTime replyCreatedAt;
+
+    @Column(name = "staff_id")
+    private String staffId;
+
     @Column(name = "created_at")
     private LocalDateTime createdAt;
 
@@ -83,6 +92,30 @@ public class Help {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getReplyContent() {
+        return replyContent;
+    }
+
+    public void setReplyContent(String replyContent) {
+        this.replyContent = replyContent;
+    }
+
+    public LocalDateTime getReplyCreatedAt() {
+        return replyCreatedAt;
+    }
+
+    public void setReplyCreatedAt(LocalDateTime replyCreatedAt) {
+        this.replyCreatedAt = replyCreatedAt;
+    }
+
+    public String getStaffId() {
+        return staffId;
+    }
+
+    public void setStaffId(String staffId) {
+        this.staffId = staffId;
     }
 
     public LocalDateTime getCreatedAt() {
