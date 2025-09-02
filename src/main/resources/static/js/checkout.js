@@ -3,15 +3,64 @@ document.addEventListener('DOMContentLoaded', function () {
     const orderHistoryButton = document.getElementById('order-history-button');
     const orderDetailsContainer = document.getElementById('order-details');
     const orderHistoryContainer = document.getElementById('order-history');
+    const totalKitsSpan = document.getElementById('total-kits');
+    const totalAmountSpan = document.getElementById('total-amount');
+
+    // Function to fetch and display cart summary
+    function fetchCartSummary() {
+        fetch('/api/cart', {
+            method: 'GET',
+            headers: {
+                // 'Authorization': 'Bearer ' + localStorage.getItem('token') // Removed for demo
+            }
+        })
+        .then(response => response.json())
+        .then(cart => {
+            let totalKits = 0;
+            let totalAmount = 0;
+            cart.items.forEach(item => {
+                totalKits += item.quantity;
+                totalAmount += item.quantity * item.kit.price;
+            });
+            totalKitsSpan.textContent = totalKits;
+            totalAmountSpan.textContent = totalAmount.toFixed(2);
+        })
+        .catch(error => {
+            console.error('Error fetching cart summary:', error);
+            totalKitsSpan.textContent = 'Error';
+            totalAmountSpan.textContent = 'Error';
+        });
+    }
+
+    // Fetch cart summary on page load
+    fetchCartSummary();
 
     if (checkoutButton) {
         checkoutButton.addEventListener('click', function () {
+            const name = document.getElementById('name').value;
+            const address = document.getElementById('address').value;
+            const phone = document.getElementById('phone').value;
+            const paymentMethod = document.getElementById('payment-method').value;
+
+            if (!name || !address || !phone || !paymentMethod) {
+                alert('Please fill in all shipping and payment details.');
+                return;
+            }
+
+            const checkoutRequest = {
+                name: name,
+                address: address,
+                phone: phone,
+                paymentMethod: paymentMethod
+            };
+
             fetch('/api/orders/checkout', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': 'Bearer ' + localStorage.getItem('token') 
-                }
+                    // 'Authorization': 'Bearer ' + localStorage.getItem('token') // Removed for demo
+                },
+                body: JSON.stringify(checkoutRequest)
             })
             .then(response => {
                 if (response.ok) {
@@ -22,6 +71,7 @@ document.addEventListener('DOMContentLoaded', function () {
             })
             .then(order => {
                 displayOrderDetails(order);
+                fetchCartSummary(); // Refresh cart summary after checkout
             })
             .catch(error => {
                 console.error('Error:', error);
@@ -35,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch('/api/orders', {
                 method: 'GET',
                 headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                    // 'Authorization': 'Bearer ' + localStorage.getItem('token') // Removed for demo
                 }
             })
             .then(response => response.json())
@@ -55,6 +105,10 @@ document.addEventListener('DOMContentLoaded', function () {
             <p>Order Date: ${new Date(order.orderDate).toLocaleString()}</p>
             <p>Total Amount: $${order.totalAmount.toFixed(2)}</p>
             <p>Status: ${order.status}</p>
+            <p>Name: ${order.name}</p>
+            <p>Address: ${order.address}</p>
+            <p>Phone: ${order.phone}</p>
+            <p>Payment Method: ${order.paymentMethod}</p>
             <h4>Items:</h4>`;
         
         order.orderItems.forEach(item => {
@@ -76,6 +130,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         <p><strong>Date:</strong> ${new Date(order.orderDate).toLocaleString()}</p>
                         <p><strong>Total:</strong> $${order.totalAmount.toFixed(2)}</p>
                         <p><strong>Status:</strong> ${order.status}</p>
+                        <p><strong>Name:</strong> ${order.name}</p>
+                        <p><strong>Address:</strong> ${order.address}</p>
+                        <p><strong>Phone:</strong> ${order.phone}</p>
+                        <p><strong>Payment Method:</strong> ${order.paymentMethod}</p>
                     </div>
                 `;
             });

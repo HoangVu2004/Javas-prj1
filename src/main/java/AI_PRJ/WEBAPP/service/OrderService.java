@@ -1,16 +1,22 @@
 package AI_PRJ.WEBAPP.service;
 
-import AI_PRJ.WEBAPP.model.*;
-import AI_PRJ.WEBAPP.repository.CartRepository;
-import AI_PRJ.WEBAPP.repository.OrderRepository;
-import AI_PRJ.WEBAPP.repository.UserRepository;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import AI_PRJ.WEBAPP.model.Cart;
+import AI_PRJ.WEBAPP.model.CartItem;
+import AI_PRJ.WEBAPP.model.Order;
+import AI_PRJ.WEBAPP.model.OrderItem;
+import AI_PRJ.WEBAPP.model.User;
+import AI_PRJ.WEBAPP.repository.CartRepository;
+import AI_PRJ.WEBAPP.repository.OrderRepository;
+import AI_PRJ.WEBAPP.repository.UserRepository;
 
 @Service
 public class OrderService {
@@ -25,7 +31,7 @@ public class OrderService {
     private UserRepository userRepository;
 
     @Transactional
-    public Order createOrderFromCart(Long userId) {
+    public Order createOrderFromCart(Long userId, String address, String phone, String paymentMethod, String name) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
@@ -38,7 +44,13 @@ public class OrderService {
 
         Order order = new Order();
         order.setUser(cart.getUser());
+        order.setOrderCode(UUID.randomUUID().toString());
         order.setOrderDate(LocalDateTime.now());
+        order.setOrderStatus("PENDING");
+        order.setAddress(address);
+        order.setPhone(phone);
+        order.setPaymentMethod(paymentMethod);
+        order.setName(name);
         order.setStatus("PENDING");
 
         BigDecimal totalAmount = BigDecimal.ZERO;
@@ -65,6 +77,6 @@ public class OrderService {
     }
 
     public List<Order> getOrdersForUser(Long userId) {
-        return orderRepository.findByUserId(userId);
+        return orderRepository.findByUser_Id(userId);
     }
 }

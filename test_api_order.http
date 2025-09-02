@@ -1,0 +1,24 @@
+### Create an Order (Checkout)
+# This request simulates the checkout process.
+# The controller is currently set up to default to user ID 1 if no authentication is provided,
+# which is useful for testing without needing a valid JWT token.
+
+
+POST http://localhost:8084/api/orders/checkout
+Content-Type: application/json
+
+{
+  "name": "John Doe",
+  "address": "123 Main St, Anytown, USA",
+  "phone": "555-123-4567",
+  "paymentMethod": "Credit Card"
+}
+
+### Get Order History for a User
+# This request retrieves all orders for the currently authenticated user.
+# NOTE: Unlike the checkout endpoint, this one requires authentication.
+# You will need to replace {{jwt_token}} with a valid token obtained from logging in.
+
+GET http://localhost:8080/api/orders
+Authorization: Bearer {{jwt_token}}
+
