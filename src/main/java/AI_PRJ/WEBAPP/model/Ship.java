@@ -18,9 +18,9 @@ public class Ship {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    private Integer userId;
-
-    private Integer kitId;
+    private Integer orderId; // New field for order ID
+    private Long userId; // New field for user ID
+    private Integer kitId; // New field for kit ID
 
     @Enumerated(EnumType.STRING)
     private ShipStatus status;
@@ -40,11 +40,20 @@ public class Ship {
         this.id = id;
     }
 
-    public Integer getUserId() {
+
+    public Integer getOrderId() {
+        return orderId;
+    }
+
+    public void setOrderId(Integer orderId) {
+        this.orderId = orderId;
+    }
+
+    public Long getUserId() {
         return userId;
     }
 
-    public void setUserId(Integer userId) {
+    public void setUserId(Long userId) {
         this.userId = userId;
     }
 

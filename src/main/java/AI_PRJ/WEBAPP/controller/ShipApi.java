@@ -2,6 +2,7 @@ package AI_PRJ.WEBAPP.controller;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -19,7 +20,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import AI_PRJ.WEBAPP.model.Order2;
+import AI_PRJ.WEBAPP.repository.Order2Repository;
+
 import AI_PRJ.WEBAPP.dto.ApiResponse;
+import AI_PRJ.WEBAPP.dto.ShipResponse; // Import ShipResponse DTO
 import AI_PRJ.WEBAPP.model.Ship;
 import AI_PRJ.WEBAPP.service.ShipService;
 
@@ -42,17 +47,20 @@ public class ShipApi {
     @Autowired
     private ShipService shipService;
 
+    @Autowired
+    private Order2Repository order2Repository;
+
     /**
     
      * Truy cập: ADMIN, MANAGER (quản lý giao nhận)
      */
     @PostMapping
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
-    public ResponseEntity<?> createShipment(@RequestParam Integer userId, @RequestParam Integer kitId) {
+    public ResponseEntity<?> createShipment(@RequestParam Integer orderId) {
         try {
-            Ship createdShipment = shipService.createShipment(userId, kitId);
+            Ship createdShipment = shipService.createShipment(orderId);
             return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse(true, "Tạo shipment thành công", createdShipment));
+                .body(new ApiResponse(true, "Tạo shipment thành công", new ShipResponse(createdShipment)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
@@ -87,7 +95,7 @@ public class ShipApi {
                 message += " - Labs đã được kích hoạt!";
             }
             
-            return ResponseEntity.ok(new ApiResponse(true, message, updatedShipment));
+            return ResponseEntity.ok(new ApiResponse(true, message, new ShipResponse(updatedShipment)));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
@@ -114,15 +122,15 @@ public class ShipApi {
             if (authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_CUSTOMER"))) {
                 UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
                 Long currentUserId = userPrincipal.getId();
-                Long shipUserId = shipmentOpt.get().getUserId().longValue();
-                if (!currentUserId.equals(shipUserId)) {
+                Optional<Order2> optionalOrder = order2Repository.findById(shipmentOpt.get().getOrderId().longValue());
+                if (optionalOrder.isEmpty() || !currentUserId.equals(optionalOrder.get().getCustomer().getId())) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new ApiResponse(false, "Bạn không có quyền xem thông tin giao hàng này."));
                 }
             }
             
             return ResponseEntity.ok(new ApiResponse(true,
-                "Lấy trạng thái shipment thành công", shipmentOpt.get()));
+                "Lấy trạng thái shipment thành công", new ShipResponse(shipmentOpt.get())));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ApiResponse(false, "Lỗi server: " + e.getMessage()));
@@ -138,7 +146,9 @@ public class ShipApi {
     @PreAuthorize("hasRole('ADMIN') or hasRole('MANAGER')")
     public ResponseEntity<?> getAllShipments() {
         try {
-            List<Ship> shipments = shipService.getAllShipments();
+            List<ShipResponse> shipments = shipService.getAllShipments().stream()
+                .map(ShipResponse::new)
+                .collect(Collectors.toList());
             return ResponseEntity.ok(new ApiResponse(true, "Lấy danh sách shipment thành công", shipments));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
